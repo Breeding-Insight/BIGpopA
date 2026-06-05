@@ -20,8 +20,8 @@ To install the development version of PopR, install from GitHub using `remotes`:
 
 ```R
 install.packages("remotes")
-remotes::install_github("Breeding-Insight/PopR", dependencies = TRUE)
-library(PopR)
+remotes::install_github("Breeding-Insight/popR", dependencies = TRUE)
+library(popR)
 ```
 ##### Note: PopR is currently in development. Please report any bugs or issues on the GitHub Issues page.
 
