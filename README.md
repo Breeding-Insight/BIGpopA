@@ -1,10 +1,9 @@
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/Breeding-Insight/PopR/workflows/R-CMD-check/badge.svg)](https://github.com/Breeding-Insight/PopR/actions)
-![GitHub Release](https://img.shields.io/github/v/release/Breeding-Insight/PopR)
+[![R-CMD-check](https://github.com/Breeding-Insight/popR/workflows/R-CMD-check/badge.svg)](https://github.com/Breeding-Insight/popR/actions)
+![GitHub Release](https://img.shields.io/github/v/release/Breeding-Insight/popR)
 [![Development Status](https://img.shields.io/badge/development-active-blue.svg)](https://img.shields.io/badge/development-active-blue.svg)
-[![CRAN Status Badge](https://www.r-pkg.org/badges/version/PopR)](https://cran.r-project.org/package=PopR)
-![GitHub License](https://img.shields.io/github/license/Breeding-Insight/PopR)
-[![codecov](https://app.codecov.io/gh/Breeding-Insight/PopR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/PopR)
+![GitHub License](https://img.shields.io/github/license/Breeding-Insight/popR)
+[![codecov](https://app.codecov.io/gh/Breeding-Insight/popR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/popR)
 <!-- badges: end -->
 
 ### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
