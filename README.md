@@ -9,6 +9,9 @@
 <!-- [![codecov](https://app.codecov.io/gh/Breeding-Insight/popR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/popR) -->
 <!-- badges: end -->
 
+=======
+# popR
+
 ### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species Version 0.1.0
 </div>
 
