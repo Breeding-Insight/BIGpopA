@@ -1,8 +1,11 @@
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/Breeding-Insight/popR/workflows/R-CMD-check/badge.svg)](https://github.com/Breeding-Insight/popR/actions)
-![GitHub Release](https://img.shields.io/github/v/release/Breeding-Insight/popR)
-[![Development Status](https://img.shields.io/badge/development-active-blue.svg)](https://img.shields.io/badge/development-active-blue.svg)
-![GitHub License](https://img.shields.io/github/license/Breeding-Insight/popR)
+[![Development Status](https://img.shields.io/badge/status-active%20development-yellow)](https://github.com/Breeding-Insight/popR)
+[![R](https://img.shields.io/badge/R-%3E%3D%204.4-blue)](https://www.r-project.org/)
+[![Shiny](https://img.shields.io/badge/Shiny-Web%20Application-blueviolet)](https://shiny.posit.co/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![GitHub issues](https://img.shields.io/github/issues/Breeding-Insight/popR)](https://github.com/Breeding-Insight/popR/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/Breeding-Insight/popR)](https://github.com/Breeding-Insight/popR/pulls)
+[![GitHub Release](https://img.shields.io/github/v/release/Breeding-Insight/popR?include_prereleases)](https://github.com/Breeding-Insight/popR/releases/latest)<!-- badges: end -->
 [![codecov](https://app.codecov.io/gh/Breeding-Insight/popR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/popR)
 <!-- badges: end -->
 
