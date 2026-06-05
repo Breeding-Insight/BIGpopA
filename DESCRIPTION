@@ -1,4 +1,4 @@
-Package: popreviewR
+Package: popR
 Title: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
 Version: 0.1.0
 Authors@R: c(person(given='Josue',
@@ -11,7 +11,7 @@ Authors@R: c(person(given='Josue',
 Maintainer: Josue Chinchilla-Vargas <josue.chinchilla@ufl.edu>
 Description: Tools for pedigree quality control and genomic breed/line
     composition estimation in diploid and polyploid breeding populations.
-    'popreviewR' provides functions to check and correct common pedigree
+    'popR' provides functions to check and correct common pedigree
     errors, assign parentage from SNP genotype data using Mendelian error
     rates, validate parent-offspring trios, and estimate genome-wide
     breed or line composition using quadratic programming. Supports both
@@ -19,8 +19,8 @@ Description: Tools for pedigree quality control and genomic breed/line
     estimation methods, see Funkhouser et al. (2017)
     <doi:10.2527/tas2016.0003>.
 License: Apache License (>= 2)
-URL: https://github.com/Breeding-Insight/popreviewR
-BugReports: https://github.com/Breeding-Insight/popreviewR/issues
+URL: https://github.com/Breeding-Insight/popR
+BugReports: https://github.com/Breeding-Insight/popR/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends: R (>= 4.4.0)
