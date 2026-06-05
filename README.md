@@ -9,7 +9,7 @@
 <!-- [![codecov](https://app.codecov.io/gh/Breeding-Insight/popR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/popR) -->
 <!-- badges: end -->
 
-### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
+### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species Version 0.1.0
 </div>
 
 PopR is an R package developed by [Breeding Insight](https://breedinginsight.org/) that provides tools for pedigree quality control and genomic breed/line composition estimation in diploid and polyploid breeding populations. It is designed to help researchers and breeders identify pedigree errors, assign parentage from SNP genotype data, and estimate genome-wide breed or line composition.
