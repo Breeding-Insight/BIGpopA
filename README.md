@@ -6,7 +6,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/Breeding-Insight/popR)](https://github.com/Breeding-Insight/popR/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/Breeding-Insight/popR)](https://github.com/Breeding-Insight/popR/pulls)
 [![GitHub Release](https://img.shields.io/github/v/release/Breeding-Insight/popR?include_prereleases)](https://github.com/Breeding-Insight/popR/releases/latest)<!-- badges: end -->
-[![codecov](https://app.codecov.io/gh/Breeding-Insight/popR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/popR)
+<!-- [![codecov](https://app.codecov.io/gh/Breeding-Insight/popR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/popR) -->
 <!-- badges: end -->
 
 ### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
