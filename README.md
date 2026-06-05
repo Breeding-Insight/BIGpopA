@@ -12,26 +12,26 @@
 =======
 # popR
 
-### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species Version 0.1.0
+### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species Version 0.2.0
 </div>
 
-PopR is an R package developed by [Breeding Insight](https://breedinginsight.org/) that provides tools for pedigree quality control and genomic breed/line composition estimation in diploid and polyploid breeding populations. It is designed to help researchers and breeders identify pedigree errors, assign parentage from SNP genotype data, and estimate genome-wide breed or line composition.
+popR is an R package developed by [Breeding Insight](https://breedinginsight.org/) that provides tools for pedigree quality control and genomic breed/line composition estimation in diploid and polyploid breeding populations. It is designed to help researchers and breeders identify pedigree errors, assign parentage from SNP genotype data, and estimate genome-wide breed or line composition.
 
 ### Installation
 
-To install the development version of PopR, install from GitHub using `remotes`:
+To install the development version of popR, install from GitHub using `remotes`:
 
 ```R
 install.packages("remotes")
 remotes::install_github("Breeding-Insight/popR", dependencies = TRUE)
 library(popR)
 ```
-##### Note: PopR is currently in development. Please report any bugs or issues on the GitHub Issues page.
+##### Note: popR is currently in development. Please report any bugs or issues on the GitHub Issues page.
 
 ### Funding
-PopR development is supported by Breeding Insight, a USDA-funded initiative based at the University of Florida - IFAS.
+popR development is supported by Breeding Insight, a USDA-funded initiative based at the University of Florida - IFAS.
 
 ## Citation
-If you use PopR in your research, please cite as:
+If you use popR in your research, please cite as:
 
-Chinchilla-Vargas, Josue, and Breeding Insight Team. 2025. "PopR: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species." https://github.com/Breeding-Insight/PopR.
+Chinchilla-Vargas, Josue, and Breeding Insight Team. 2025. "popR: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species." https://github.com/Breeding-Insight/popR.
