@@ -1,4 +1,4 @@
 library(testthat)
-library(BIGr)
+library(popR)
 
-test_check("BIGr")
+test_check("popR")

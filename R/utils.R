@@ -1,94 +1,66 @@
-#Internal Functions
-
 utils::globalVariables(c(
-  "ALT", "AlleleID", "AlleleSequence", "CHROM", "Concordance", "Data", "ID",
-  "MarkerName", "POS",
-  "QPseparate", "QPsolve_par", "REF", "Type", "Var1", "Variant", "geno",
-  "ind", "ref", "row_name", "size", "snp",
-  "CloneID", "Count", "qualifying_sites_count",
-  "MarkerID", "SampleID", "Dosage",
-  "pos", "alt", "match_key",
-  ":=", ".SD", "Sex", "Male_Parent", "Female_Parent", "chr"
+  # data.table internals
+  ":=", ".SD",
+  
+  # find_parentage.R
+  "id", "sex", "male_parent", "female_parent",
+  "mendelian_error_pct", "plot_status", "status",
+  
+  # validate_pedigree.R
+  "trio_mendelian_error_pct", "recommended_correction",
+  
+  # breedtools internal helpers
+  "QPseparate", "QPsolve_par"
 ))
 
-#' Convert GT format to numeric dosage
-#' @param gt a genotype matrix with samples as columns and variants as rows
-#' @return numeric genotype values
+#'
+#' Performs whole genome breed composition prediction.
+#'
+#' @param Y numeric vector of genotypes (with names as SNPs) from a single animal.
+#'   coded as dosage of allele B \code{{0, 1, 2, ..., ploidy}}
+#' @param X numeric matrix of allele frequencies from reference animals
+#' @param p numeric indicating number of breeds represented in X
+#' @param names character names of breeds
+#' @return data.frame of breed composition estimates
+#' @import quadprog
+#' @importFrom stats cor
+#' @references Funkhouser SA, Bates RO, Ernst CW, Newcom D, Steibel JP. Estimation of genome-wide and locus-specific
+#' breed composition in pigs. Transl Anim Sci. 2017 Feb 1;1(1):36-44.
+#'
 #' @noRd
-convert_to_dosage <- function(gt) {
-  # Split the genotype string
-  alleles <- strsplit(gt, "[|/]")
-  # Sum the alleles, treating NA values appropriately
-  sapply(alleles, function(x) {
-    if (any(is.na(x))) {
-      return(NA)
-    } else {
-      return(sum(as.numeric(x), na.rm = TRUE))
-    }
-  })
+QPsolve <- function(Y, X) {
+  
+  # Remove NAs from Y and remove corresponding
+  #   SNPs from X. Ensure Y is numeric
+  Ymod <- Y[!is.na(Y)]
+  Xmod <- X[names(Ymod), ]
+  
+  # Determine properties from X matrix - the number of parameters (breeds) p
+  #   and the names of those parameters.
+  p <- ncol(X)
+  names <- colnames(X)
+  
+  # perfom steps needed to solve OLS by framing
+  # as a QP problem
+  # Rinv - matrix should be of dimensions px(p+1) where p is the number of variables in X
+  Rinv <- solve(chol(t(Xmod) %*% Xmod))
+  
+  # C - the first column is a sum restriction (all equal to 1) and the rest of the columns an identity matrix
+  C <- cbind(rep(1, p), diag(p))
+  
+  # b2 - This should be a vector of length p+1 the first element is the value of the sum (1)
+  #   the other elements are the restriction of individual coefficients (>)
+  #   so a value 0 produces positive coefficients
+  b2 <- c(1, rep(0, p))
+  
+  # dd - this should be a matrix NOT a vector
+  dd <- (t(Ymod) %*% Xmod)
+  
+  qp <- solve.QP(Dmat = Rinv, factorized = TRUE, dvec = dd, Amat = C, bvec = b2, meq = 1)
+  beta <- qp$solution
+  rr <- cor(Ymod, Xmod %*% beta)^2
+  result <- c(beta, rr)
+  names(result) <- c(names, "R2")
+  return(result)
 }
 
-#' Verbose Message Utility
-#'
-#' Prints a formatted verbose message with timestamp, indentation, and type label, if verbose is TRUE.
-#'
-#' @param text Character string, the message to print (supports sprintf formatting).
-#' @param verbose Logical. If TRUE, prints the message; if FALSE, suppresses output.
-#' @param level Integer, indentation level (0=header, 1=main step, 2=detail, 3=sub-detail).
-#' @param type Character string, message type (e.g., "INFO", "WARN", "ERROR"). Only shown for level 0.
-#' @param ... Additional arguments passed to sprintf for formatting.
-#'
-#' @details Use the verbose argument to control message output. Typically, pass the function's verbose parameter to vmsg.
-#'
-#' @return No return value, called for side effects.
-#' @noRd
-vmsg <- function(text, verbose = FALSE, level = 1, type = ">>", ...) {
-  if (!verbose) return(invisible())
-  # Format timestamp
-  timestamp <- format(Sys.time(), "[%H:%M:%S]")
-
-  # Create indentation based on level
-  indent <- switch(as.character(level),
-                   "0" = "",           # Section headers
-                   "1" = "  \u2219 ",       # Main steps (medium bullet)
-                   "2" = "    - ",     # Details
-                   "3" = "      > ",   # Sub-details
-                   paste0(paste(rep("  ", level), collapse = ""), "\u2022 ")  # Fallback for level > 3
-  )
-
-  # Format type label (only show for level 0)
-  type_label <- if (level == 0) sprintf("%-1s ", type) else ""
-
-  # Format message text
-  dots <- list(...)
-  if(length(dots) == 0) {
-    msg_text <- text
-  } else {
-    msg_text <- sprintf(text, ...)
-  }
-  # Combine everything
-  formatted_msg <- sprintf("%s %s%s%s", timestamp, type_label, indent, msg_text)
-  message(formatted_msg)
-}
-
-
-#' Check Whether a URL Is Accessible
-#'
-#' Attempts to open a connection to the given URL and returns `TRUE` if
-#' successful, `FALSE` otherwise. Errors and warnings are both treated as
-#' inaccessible.
-#'
-#' @param u character. The URL to test.
-#'
-#' @return A single logical: `TRUE` if the URL can be opened, `FALSE` if not.
-#'
-#' @keywords internal
-#' @noRd
-#'
-url_exists <- function(u) {
-  tryCatch({
-    con <- url(u, open = "rb")
-    close(con)
-    TRUE
-  }, error = function(e) FALSE, warning = function(w) FALSE)
-}

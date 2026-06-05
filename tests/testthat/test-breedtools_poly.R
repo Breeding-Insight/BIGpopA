@@ -3,9 +3,9 @@ context("BreedTools")
 
 test_that("test breedtools poly",{
   #Input variables
-  ref_file <- system.file("test_ref.txt", package="BIGr")
-  val_file <- system.file("test_test.txt", package="BIGr")
-  ref_ids <- system.file("ref_ids.txt", package="BIGr")
+  ref_file <- system.file("test_ref.txt", package="popR")
+  val_file <- system.file("test_test.txt", package="popR")
+  ref_ids <- system.file("ref_ids.txt", package="popR")
 
   #import files
   reference = read.table(ref_file, header = T, row.names = 1, sep = "\t")
