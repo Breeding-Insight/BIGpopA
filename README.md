@@ -1,7 +1,6 @@
 <!-- badges: start -->
 [![Development Status](https://img.shields.io/badge/status-active%20development-yellow)](https://github.com/Breeding-Insight/popR)
 [![R](https://img.shields.io/badge/R-%3E%3D%204.4-blue)](https://www.r-project.org/)
-[![Shiny](https://img.shields.io/badge/Shiny-Web%20Application-blueviolet)](https://shiny.posit.co/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![GitHub issues](https://img.shields.io/github/issues/Breeding-Insight/popR)](https://github.com/Breeding-Insight/popR/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/Breeding-Insight/popR)](https://github.com/Breeding-Insight/popR/pulls)
@@ -9,11 +8,9 @@
 <!-- [![codecov](https://app.codecov.io/gh/Breeding-Insight/popR/graph/badge.svg?token=PJUZMRN1NF)](https://app.codecov.io/gh/Breeding-Insight/popR) -->
 <!-- badges: end -->
 
-=======
 # popR
 
-### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species Version 0.1.0-beta
-</div>
+### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species Version 0.1.0
 
 popR is an R package developed by [Breeding Insight](https://breedinginsight.org/) that provides tools for pedigree quality control and genomic breed/line composition estimation in diploid and polyploid breeding populations. It is designed to help researchers and breeders identify pedigree errors, assign parentage from SNP genotype data, and estimate genome-wide breed or line composition.
 
