@@ -1,10 +1,13 @@
 Package: BIGpopA
 Title: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
-Version: 1.1
+Version: 1.0.2
 Authors@R: c(person(given='Josue',
                     family='Chinchilla-Vargas',
                     email='josue.chinchilla@ufl.edu',
                     role=c('cre','aut')),
+             person(given='Alexander',
+                    family='Sandercock',
+                    role=c('aut')),
              person('University', "of Florida",
                     role=c('cph'),
                     comment = "Breeding Insight"))

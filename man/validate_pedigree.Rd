@@ -65,6 +65,15 @@ best-matching replacements, and outputs a corrected pedigree. Founder trios
 supplied. Trios absent from the genotype file are retained as
 no_genotype_data.
 }
+\examples{
+\dontrun{
+results <- validate_pedigree(
+  pedigree_file   = "pedigree.txt",
+  genotypes_file  = "genotypes.txt"
+)
+}
+
+}
 \author{
 Josue Chinchilla-Vargas
 }

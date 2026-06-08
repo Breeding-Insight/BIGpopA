@@ -17,7 +17,7 @@ devtools::run_examples()
 
 # autotest::autotest_package(test = TRUE)
 
-# Check package as CRAN using the correct CRAN repo
+# Check package as CRAN using the correct CRAN repo, simulates what CRAN does
 withr::with_options(list(repos = c(CRAN = "https://cloud.r-project.org/")),
                     {callr::default_repos()
                       rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran")) })
@@ -45,39 +45,39 @@ urlchecker::url_update()
 
 # check on other distributions
 # _rhub v2
-rhub::rhub_setup() # Commit, push, merge
-rhub::rhub_doctor()
-rhub::rhub_platforms()
-rhub::rhub_check() # launch manually
+#rhub::rhub_setup() # Commit, push, merge
+#rhub::rhub_doctor()
+#rhub::rhub_platforms()
+#rhub::rhub_check() # launch manually
 
 
 # _win devel CRAN
-devtools::check_win_devel()
+#devtools::check_win_devel()
 # _win release CRAN
-devtools::check_win_release()
+#devtools::check_win_release()
 # _macos CRAN
 # Need to follow the URL proposed to see the results
-devtools::check_mac_release()
+#devtools::check_mac_release()
 
 # Check reverse dependencies
 # remotes::install_github("r-lib/revdepcheck")
-usethis::use_git_ignore("revdep/")
-usethis::use_build_ignore("revdep/")
+#usethis::use_git_ignore("revdep/")
+#usethis::use_build_ignore("revdep/")
 
 devtools::revdep()
-library(revdepcheck)
+#library(revdepcheck)
 # In another session because Rstudio interactive change your config:
-id <- rstudioapi::terminalExecute("Rscript -e 'revdepcheck::revdep_check(num_workers = 4)'")
-rstudioapi::terminalKill(id)
+#id <- rstudioapi::terminalExecute("Rscript -e 'revdepcheck::revdep_check(num_workers = 4)'")
+#rstudioapi::terminalKill(id)
 # if [Exit Code] is not 0, there is a problem !
 # to see the problem: execute the command in a new terminal manually.
 
 # See outputs now available in revdep/
-revdep_details(revdep = "pkg")
-revdep_summary()                 # table of results by package
-revdep_report()
+#revdep_details(revdep = "pkg")
+#revdep_summary()                 # table of results by package
+#revdep_report()
 # Clean up when on CRAN
-revdep_reset()
+#revdep_reset()
 
 # Update NEWS
 # Bump version manually and add list of changes
@@ -86,7 +86,7 @@ revdep_reset()
 usethis::use_cran_comments(open = rlang::is_interactive())
 
 # Upgrade version number
-usethis::use_version(which = c("patch", "minor", "major", "dev")[1])
+#usethis::use_version(which = c("patch", "minor", "major", "dev")[1])
 
 # Verify you're ready for release, and release
 devtools::release()

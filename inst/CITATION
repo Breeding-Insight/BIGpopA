@@ -1,16 +1,18 @@
 bibentry(
   bibtype = "Manual",
   title   = "BIGpopA: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species",
-  author  = c(
-    person(given = "Josue",        family = "Chinchilla-Vargas",
-           email = "josue.chinchilla@ufl.edu", role = c("cre", "aut")),
-    person(given = "Alexander M.", family = "Sandercock",
-           email = "sandercock.alex@gmail.com", role = "aut"),
-    person(given = "Cristiane H.", family = "Taniguti",   role = "aut"),
-    person("University", "of Florida", role = "cph",
-           comment = "Breeding Insight")
+  author  = c(person(given='Josue',
+                    family='Chinchilla-Vargas',
+                    email='josue.chinchilla@ufl.edu',
+                    role=c('cre','aut')),
+             person(given='Alexander',
+                    family='Sandercock',
+                    role=c('aut')),
+             person('University', "of Florida",
+                    role=c('cph'),
+                    comment = "Breeding Insight"))
   ),
   year = "2026",
-  note = "R package version 1.1.0",
+  note = "R package version 1.0.2",
   url  = "https://github.com/Breeding-Insight/BIGpopA"
 )

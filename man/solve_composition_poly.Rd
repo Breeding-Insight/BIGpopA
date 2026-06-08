@@ -16,41 +16,42 @@ solve_composition_poly(
 )
 }
 \arguments{
-\item{Y}{numeric matrix of genotypes (columns) from all animals (rows) in population
-coded as dosage of allele B \code{{0, 1, 2, ..., ploidy}}}
+\item{Y}{numeric matrix of genotypes (columns) from all animals (rows) in
+the population, coded as dosage of allele B (0, 1, 2, ..., ploidy).}
 
-\item{X}{numeric matrix of allele frequencies (rows) from each reference panel (columns). Frequencies are
-relative to allele B.}
+\item{X}{numeric matrix of allele frequencies (rows) from each reference
+panel (columns). Frequencies are relative to allele B.}
 
-\item{ped}{data.frame giving pedigree information. Must be formatted "ID", "Sire", "Dam"}
+\item{ped}{data.frame giving pedigree information. Must be formatted with
+columns: ID, Sire, Dam.}
 
-\item{groups}{list of IDs categorized by breed/population. If specified, output will be a list
-of results categorized by breed/population.}
+\item{groups}{list of IDs categorized by breed/population. If specified,
+output will be a list of results categorized by breed/population.}
 
-\item{mia}{logical. Only applies if ped argument is supplied. If true, returns a data.frame
-containing the inferred maternally inherited allele for each locus for each animal instead
-of breed composition results.}
+\item{mia}{logical. Only applies if ped argument is supplied. If TRUE,
+returns a data.frame containing the inferred maternally inherited allele
+for each locus for each animal instead of breed composition results.}
 
-\item{sire}{logical. Only applies if ped argument is supplied. If true, returns a data.frame
-containing sire genotypes for each locus for each animal instead of breed composition results.}
+\item{sire}{logical. Only applies if ped argument is supplied. If TRUE,
+returns a data.frame containing sire genotypes for each locus for each
+animal instead of breed composition results.}
 
-\item{dam}{logical. Only applies if ped argument is supplied. If true, returns a data.frame
-containing dam genotypes for each locus for each animal instead of breed composition results.}
+\item{dam}{logical. Only applies if ped argument is supplied. If TRUE,
+returns a data.frame containing dam genotypes for each locus for each
+animal instead of breed composition results.}
 
-\item{ploidy}{integer. The ploidy level of the species (e.g., 2 for diploid, 3 for triploid, etc.).}
+\item{ploidy}{integer. The ploidy level of the species (e.g., 2 for diploid,
+3 for triploid).}
 }
 \value{
-A data.frame or list of data.frames (if groups is !NULL) with breed/ancestry composition
-results
+A data.frame, or a list of data.frames when groups is not NULL,
+containing breed/ancestry composition results.
 }
 \description{
-Computes genome-wide breed/ancestry composition using quadratic programming on a
-batch of animals.
+Computes genome-wide breed/ancestry composition using quadratic programming
+on a batch of animals.
 }
 \examples{
-# Example inputs for solve_composition_poly (ploidy = 4)
-
-# (This would typically be the output from allele_freq_poly)
 allele_freqs_matrix <- matrix(
   c(0.625, 0.500,
     0.500, 0.500,
@@ -61,15 +62,13 @@ allele_freqs_matrix <- matrix(
   dimnames = list(paste0("SNP", 1:5), c("VarA", "VarB"))
 )
 
-# Validation Genotypes (individuals x SNPs)
 val_geno_matrix <- matrix(
-  c(2, 1, 2, 3, 4,  # Test1 dosages for SNP1-5
-    3, 4, 2, 3, 0), # Test2 dosages for SNP1-5
+  c(2, 1, 2, 3, 4,
+    3, 4, 2, 3, 0),
   nrow = 2, ncol = 5, byrow = TRUE,
   dimnames = list(paste0("Test", 1:2), paste0("SNP", 1:5))
 )
 
-# Calculate Breed Composition
 composition <- solve_composition_poly(Y = val_geno_matrix,
                                       X = allele_freqs_matrix,
                                       ploidy = 4)
@@ -77,6 +76,7 @@ print(composition)
 
 }
 \references{
-Funkhouser SA, Bates RO, Ernst CW, Newcom D, Steibel JP. Estimation of genome-wide and locus-specific
-breed composition in pigs. Transl Anim Sci. 2017 Feb 1;1(1):36-44.
+Funkhouser SA, Bates RO, Ernst CW, Newcom D, Steibel JP.
+Estimation of genome-wide and locus-specific breed composition in pigs.
+Transl Anim Sci. 2017 Feb 1;1(1):36-44.
 }
