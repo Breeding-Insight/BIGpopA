@@ -1,5 +1,5 @@
 # BIGpopA 1.0.1
--Fixed typo on repo name and patched find_parentage
+- Fixed typo on repo name and patched find_parentage
 
 
 # BIGpopA 1.0
