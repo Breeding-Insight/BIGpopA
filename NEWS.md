@@ -1,5 +1,12 @@
-# BIGpopA 0.1.0
+#BIGpopA 1.0.1
+-Fixed typo on repo name and patched find_parentage
 
+
+# BIGpopA 1.0
+- Renamed package to BIGpopA and made repo public
+
+
+# popR 0.1.0
 - Initial release of `BIGpopA` as a standalone package.
 - `BIGpopA` contains pedigree validation and breed/line composition functions
   previously found in [BIGr](https://github.com/Breeding-Insight/BIGr),
