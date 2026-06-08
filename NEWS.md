@@ -1,7 +1,7 @@
-# popR 0.1.0
+# BIBpopA 0.1.0
 
-- Initial release of `popR` as a standalone package.
-- `popR` contains pedigree validation and breed/line composition functions
+- Initial release of `BIBpopA` as a standalone package.
+- `BIBpopA` contains pedigree validation and breed/line composition functions
   previously found in [BIGr](https://github.com/Breeding-Insight/BIGr),
   where they will no longer be maintained going forward.
 - These functions are the backbone of the pedigree and composition modules

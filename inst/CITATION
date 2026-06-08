@@ -1,6 +1,6 @@
 bibentry(
   bibtype = "Manual",
-  title   = "popR: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species",
+  title   = "BIBpopA: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species",
   author  = c(
     person(given = "Josue",        family = "Chinchilla-Vargas",
            email = "josue.chinchilla@ufl.edu", role = c("cre", "aut")),
@@ -12,5 +12,5 @@ bibentry(
   ),
   year = "2026",
   note = "R package version 0.1.0",
-  url  = "https://github.com/Breeding-Insight/popR"
+  url  = "https://github.com/Breeding-Insight/BIBpopA"
 )

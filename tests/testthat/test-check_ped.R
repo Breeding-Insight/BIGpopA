@@ -323,7 +323,7 @@ test_that("no output files are written to disk", {
 # janitor::clean_names() handles any remaining capitalization variants
 # ==============================================================================
 test_that("integration test with bundled fixture file", {
-  ped_file <- system.file("check_ped_test.txt", package = "popR")
+  ped_file <- system.file("check_ped_test.txt", package = "BIBpopA")
   skip_if(ped_file == "", "Bundled fixture file not found; skipping.")
 
   out <- check_ped(ped_file, seed = 101919, verbose = FALSE)

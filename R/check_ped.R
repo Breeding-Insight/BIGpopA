@@ -27,7 +27,7 @@
 #' }
 #'
 #' @examples
-#' ped_file <- system.file("check_ped_test.txt", package = "popR")
+#' ped_file <- system.file("check_ped_test.txt", package = "BIBpopA")
 #' ped_errors <- check_ped(ped.file = ped_file, seed = 101919, verbose = FALSE)
 #'
 #' # Also accepts a data.table directly
