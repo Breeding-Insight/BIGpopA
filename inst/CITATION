@@ -5,11 +5,14 @@ bibentry(
                     family='Chinchilla-Vargas',
                     email='josue.chinchilla@ufl.edu',
                     role=c('cre','aut')),
+             person(given='Alexander',
+                    family='Sandercock',
+                    role=c('aut')),
              person('University', "of Florida",
                     role=c('cph'),
                     comment = "Breeding Insight"))
   ),
   year = "2026",
-  note = "R package version 1.0.1",
+  note = "R package version 1.0.2",
   url  = "https://github.com/Breeding-Insight/BIGpopA"
 )

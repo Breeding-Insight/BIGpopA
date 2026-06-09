@@ -9,6 +9,10 @@ write_ped <- function(df) {
 
 context("check_ped – Pedigree Quality Checks")
 
+
+# Return structure
+
+
 test_that("check_ped returns a named list of length 6", {
   ped <- data.frame(
     id            = c("A", "B", "C"),
@@ -55,6 +59,10 @@ test_that("corrected_pedigree has lowercase column names and no row_number", {
   expect_false("row_number" %in% names(out$corrected_pedigree))
 })
 
+
+# Clean pedigree
+
+
 test_that("clean pedigree produces no issues", {
   ped <- data.frame(
     id            = c("G1", "G2", "P1"),
@@ -69,6 +77,10 @@ test_that("clean pedigree produces no issues", {
   expect_equal(nrow(out$dependencies),           0)
   expect_equal(nrow(out$corrected_pedigree),     3)
 })
+
+
+# Check 1: Exact duplicates
+
 
 test_that("check_ped detects exact duplicates", {
   ped <- data.frame(
@@ -90,6 +102,20 @@ test_that("exact duplicates are collapsed to one row in corrected_pedigree", {
   out <- check_ped(write_ped(ped), verbose = FALSE)
   expect_equal(sum(out$corrected_pedigree$id == "A"), 1)
 })
+
+test_that("exact duplicates do not appear in conflicting_trios", {
+  ped <- data.frame(
+    id            = c("A", "A", "B"),
+    male_parent   = c("0", "0", "A"),
+    female_parent = c("0", "0", "0")
+  )
+  out <- check_ped(write_ped(ped), verbose = FALSE)
+  expect_equal(nrow(out$conflicting_trios), 0)
+})
+
+
+# Check 2: Conflicting trios
+
 
 test_that("check_ped detects conflicting trios", {
   ped <- data.frame(
@@ -127,6 +153,10 @@ test_that("correct_conflicting_trios = FALSE leaves conflicting rows as-is", {
   expect_equal(sum(out$corrected_pedigree$id == "A"), 2)
 })
 
+
+# Check 3: Missing parents
+
+
 test_that("check_ped detects missing parents", {
   ped <- data.frame(
     id            = c("A", "B"),
@@ -145,29 +175,31 @@ test_that("missing parents are added as founder rows in corrected_pedigree", {
     male_parent   = c("0", "X"),
     female_parent = c("0", "Y")
   )
-  out <- check_ped(write_ped(ped), verbose = FALSE)
-  expect_true("X" %in% out$corrected_pedigree$id)
-  expect_true("Y" %in% out$corrected_pedigree$id)
+  out   <- check_ped(write_ped(ped), verbose = FALSE)
   x_row <- out$corrected_pedigree[out$corrected_pedigree$id == "X", ]
   y_row <- out$corrected_pedigree[out$corrected_pedigree$id == "Y", ]
+  expect_true(nrow(x_row) > 0)
+  expect_true(nrow(y_row) > 0)
   expect_equal(x_row$male_parent,   "0")
   expect_equal(x_row$female_parent, "0")
   expect_equal(y_row$male_parent,   "0")
   expect_equal(y_row$female_parent, "0")
 })
 
-test_that("individual that is its own parent is logged as a dependency", {
+test_that("a missing parent referenced multiple times is added only once", {
   ped <- data.frame(
-    id            = c("A", "B"),
-    male_parent   = c("A", "0"),
+    id            = c("B", "C"),
+    male_parent   = c("X", "X"),
     female_parent = c("0", "0")
   )
   out <- check_ped(write_ped(ped), verbose = FALSE)
-  expect_gt(nrow(out$dependencies), 0)
+  expect_equal(sum(out$corrected_pedigree$id == "X"), 1)
 })
 
-# inconsistent_sex_roles returns rows where the conflicting ID appears
-# AS A PARENT — check male_parent and female_parent columns [1]
+
+# Check 4: Inconsistent sex roles
+
+
 test_that("check_ped detects inconsistent sex roles", {
   ped <- data.frame(
     id            = c("child1", "child2", "P"),
@@ -206,6 +238,30 @@ test_that("correct_inconsistent_sex_roles = FALSE leaves conflicting references"
   expect_true(any(corr$male_parent == "P" | corr$female_parent == "P"))
 })
 
+
+# Check 5: Dependencies / cycles
+
+
+test_that("individual that is its own parent is logged as a dependency", {
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("A", "0"),
+    female_parent = c("0", "0")
+  )
+  out <- check_ped(write_ped(ped), verbose = FALSE)
+  expect_gt(nrow(out$dependencies), 0)
+})
+
+test_that("self-parent individual is still present in corrected_pedigree", {
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("A", "0"),
+    female_parent = c("0", "0")
+  )
+  out <- check_ped(write_ped(ped), verbose = FALSE)
+  expect_true("A" %in% out$corrected_pedigree$id)
+})
+
 test_that("check_ped detects a direct two-node cycle", {
   ped <- data.frame(
     id            = c("A", "B"),
@@ -227,6 +283,31 @@ test_that("cycle-involved IDs are still present in corrected_pedigree", {
   expect_true("B" %in% out$corrected_pedigree$id)
 })
 
+test_that("three-node chain cycle is detected in dependencies", {
+  ped <- data.frame(
+    id            = c("A", "B", "C"),
+    male_parent   = c("C", "A", "B"),
+    female_parent = c("0", "0", "0")
+  )
+  out <- check_ped(write_ped(ped), verbose = FALSE)
+  expect_gt(nrow(out$dependencies), 0)
+})
+
+test_that("dependencies data.frame has a 'dependency' column of type character", {
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("B", "A"),
+    female_parent = c("0", "0")
+  )
+  out <- check_ped(write_ped(ped), verbose = FALSE)
+  expect_true("dependency" %in% names(out$dependencies))
+  expect_true(is.character(out$dependencies$dependency))
+})
+
+
+# Input validation
+
+
 test_that("check_ped errors when required columns are missing", {
   bad_df <- data.frame(
     animal_id = c("a", "b"),
@@ -238,6 +319,23 @@ test_that("check_ped errors when required columns are missing", {
     regexp = "missing required column"
   )
 })
+
+test_that("non-existent file path raises an error", {
+  expect_error(
+    check_ped("non_existent_file_xyz.txt", verbose = FALSE)
+  )
+})
+
+test_that("invalid input type raises a descriptive error for check_ped", {
+  expect_error(
+    check_ped(list(id = "A"), verbose = FALSE),
+    regexp = "file path"
+  )
+})
+
+
+# Column name flexibility
+
 
 test_that("check_ped accepts mixed-case column names (ID, Male_Parent, Female_Parent)", {
   ped <- data.frame(
@@ -272,77 +370,20 @@ test_that("check_ped accepts columns in any order", {
   expect_equal(nrow(out$corrected_pedigree), 2)
 })
 
-test_that("seed produces reproducible results", {
-  ped <- data.frame(
-    id            = c("A", "B", "C"),
-    male_parent   = c("0", "A", "A"),
-    female_parent = c("0", "0", "0")
-  )
-  f    <- write_ped(ped)
-  out1 <- check_ped(f, seed = 42, verbose = FALSE)
-  out2 <- check_ped(f, seed = 42, verbose = FALSE)
-  expect_identical(out1$corrected_pedigree, out2$corrected_pedigree)
-})
-
-test_that("verbose = FALSE suppresses console output", {
+test_that("extra columns beyond the three required are preserved in corrected_pedigree", {
   ped <- data.frame(
     id            = c("A", "B"),
     male_parent   = c("0", "A"),
-    female_parent = c("0", "0")
+    female_parent = c("0", "0"),
+    cohort        = c(2020L, 2021L)
   )
-  expect_silent(check_ped(write_ped(ped), verbose = FALSE))
+  out <- check_ped(write_ped(ped), verbose = FALSE)
+  expect_true("cohort" %in% names(out$corrected_pedigree))
 })
 
-test_that("check_ped returns invisibly", {
-  ped <- data.frame(
-    id            = c("A", "B"),
-    male_parent   = c("0", "A"),
-    female_parent = c("0", "0")
-  )
-  expect_invisible(check_ped(write_ped(ped), verbose = FALSE))
-})
 
-test_that("no output files are written to disk", {
-  tmp_dir <- tempfile()
-  dir.create(tmp_dir)
-  old_wd  <- getwd()
-  setwd(tmp_dir)
-  on.exit({ setwd(old_wd); unlink(tmp_dir, recursive = TRUE) }, add = TRUE)
-  ped <- data.frame(
-    id            = c("A", "B"),
-    male_parent   = c("0", "A"),
-    female_parent = c("0", "0")
-  )
-  check_ped(write_ped(ped), verbose = FALSE)
-  expect_length(list.files(tmp_dir), 0)
-})
+# In-memory input
 
-# ==============================================================================
-# Integration test
-# Fixture has sire/dam columns renamed to male_parent/female_parent [1]
-# janitor::clean_names() handles any remaining capitalization variants
-# ==============================================================================
-test_that("integration test with bundled fixture file", {
-  ped_file <- system.file("check_ped_test.txt", package = "BIGpopA")
-  skip_if(ped_file == "", "Bundled fixture file not found; skipping.")
-
-  out <- check_ped(ped_file, seed = 101919, verbose = FALSE)
-
-  expect_length(out, 6)
-  expect_gt(nrow(out$inconsistent_sex_roles), 0)
-
-  # inconsistent_sex_roles stores rows where the conflicting ID appears
-  # AS A PARENT in male_parent or female_parent columns [1]
-  conflicting_ids <- unique(c(
-    out$inconsistent_sex_roles$male_parent,
-    out$inconsistent_sex_roles$female_parent
-  ))
-  expect_true(any(c("grandfather2", "grandfather3") %in% conflicting_ids))
-  expect_equal(nrow(out$missing_parents), 8)
-})
-# ==============================================================================
-# In-memory input — data.frame / data.table accepted directly
-# ==============================================================================
 
 test_that("check_ped accepts a data.frame directly", {
   ped <- data.frame(
@@ -380,9 +421,114 @@ test_that("in-memory and file-path inputs produce identical corrected_pedigree",
                    out_mem$corrected_pedigree)
 })
 
-test_that("invalid input type raises a descriptive error for check_ped", {
-  expect_error(
-    check_ped(list(id = "A"), verbose = FALSE),
-    regexp = "file path"
+
+# Verbosity, seed, and side effects
+
+
+test_that("verbose = FALSE suppresses console output", {
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("0", "A"),
+    female_parent = c("0", "0")
   )
+  expect_silent(check_ped(write_ped(ped), verbose = FALSE))
+})
+
+test_that("verbose = TRUE produces console output", {
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("0", "A"),
+    female_parent = c("0", "0")
+  )
+  expect_output(check_ped(write_ped(ped), verbose = TRUE))
+})
+
+test_that("check_ped returns invisibly", {
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("0", "A"),
+    female_parent = c("0", "0")
+  )
+  expect_invisible(check_ped(write_ped(ped), verbose = FALSE))
+})
+
+test_that("seed produces reproducible results", {
+  ped <- data.frame(
+    id            = c("A", "B", "C"),
+    male_parent   = c("0", "A", "A"),
+    female_parent = c("0", "0", "0")
+  )
+  f    <- write_ped(ped)
+  out1 <- check_ped(f, seed = 42, verbose = FALSE)
+  out2 <- check_ped(f, seed = 42, verbose = FALSE)
+  expect_identical(out1$corrected_pedigree, out2$corrected_pedigree)
+})
+
+test_that("seed = NULL runs without error", {
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("0", "A"),
+    female_parent = c("0", "0")
+  )
+  expect_no_error(check_ped(write_ped(ped), seed = NULL, verbose = FALSE))
+})
+
+test_that("no output files are written to disk", {
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  old_wd  <- getwd()
+  setwd(tmp_dir)
+  on.exit({ setwd(old_wd); unlink(tmp_dir, recursive = TRUE) }, add = TRUE)
+  ped <- data.frame(
+    id            = c("A", "B"),
+    male_parent   = c("0", "A"),
+    female_parent = c("0", "0")
+  )
+  check_ped(write_ped(ped), verbose = FALSE)
+  expect_length(list.files(tmp_dir), 0)
+})
+
+
+# Correction flag interactions
+
+
+test_that("both correction flags FALSE still returns a corrected_pedigree", {
+  ped <- data.frame(
+    id            = c("A", "A", "child1", "child2", "P"),
+    male_parent   = c("X", "Y", "P",      "0",      "0"),
+    female_parent = c("M", "M", "0",      "P",      "0")
+  )
+  out <- check_ped(write_ped(ped), verbose = FALSE,
+                   correct_conflicting_trios      = FALSE,
+                   correct_inconsistent_sex_roles = FALSE)
+  expect_true(is.data.frame(out$corrected_pedigree))
+  expect_gt(nrow(out$corrected_pedigree), 0)
+})
+
+
+# Integration test
+
+
+test_that("integration test with bundled fixture file", {
+  ped_file <- system.file("check_ped_test.txt", package = "BIGpopA")
+  skip_if(ped_file == "", "Bundled fixture file not found; skipping.")
+  
+  raw        <- utils::read.table(ped_file, header = TRUE)
+  names(raw) <- tolower(names(raw))
+  
+  if ("sire"   %in% names(raw)) names(raw)[names(raw) == "sire"]   <- "male_parent"
+  if ("dam"    %in% names(raw)) names(raw)[names(raw) == "dam"]    <- "female_parent"
+  if ("animal" %in% names(raw)) names(raw)[names(raw) == "animal"] <- "id"
+  
+  out <- check_ped(raw, seed = 101919, verbose = FALSE)
+  
+  expect_length(out, 6)
+  expect_gt(nrow(out$inconsistent_sex_roles), 0)
+  
+  conflicting_ids <- unique(c(
+    out$inconsistent_sex_roles$male_parent,
+    out$inconsistent_sex_roles$female_parent
+  ))
+  expect_true(any(c("grandfather2", "grandfather3") %in% conflicting_ids))
+  expect_equal(nrow(out$missing_parents), 13)
 })

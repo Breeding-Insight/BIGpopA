@@ -29,32 +29,30 @@ data.table with an 'id' column and an optional 'sex' column
 \item{progeny_file}{Path to a TSV/CSV/TXT file, OR a data.frame /
 data.table with an 'id' column.}
 
-\item{method}{Character. One of \code{"best_male_parent"},
-\code{"best_female_parent"}, \code{"best_match"}, or
-\code{"best_pair"} (default).}
+\item{method}{Character. One of "best_male_parent", "best_female_parent",
+"best_match", or "best_pair" (default).}
 
 \item{min_markers}{Integer. Minimum markers required; fewer flags
-\code{low_markers} (default: \code{10}).}
+low_markers (default: 10).}
 
 \item{error_threshold}{Numeric. Maximum mismatch percentage; exceeded values
-flag \code{high_error} (default: \code{5.0}). Must be between 0 and 100.}
+flag high_error (default: 5.0). Must be between 0 and 100.}
 
-\item{show_ties}{Logical. If \code{TRUE}, tied best pairs are appended as
-suffix columns. Default is \code{TRUE}.}
+\item{show_ties}{Logical. If TRUE, tied best pairs are appended as suffix
+columns. Default is TRUE.}
 
-\item{allow_parent_selfing}{Logical. If \code{FALSE}, candidate pairs with
-identical male and female parent IDs are excluded. Applies only when
-\code{method = "best_pair"}. Default is \code{FALSE}.}
+\item{allow_parent_selfing}{Logical. If FALSE, candidate pairs with identical
+male and female parent IDs are excluded. Applies only when method is
+"best_pair". Default is FALSE.}
 
-\item{exclude_self_match}{Logical. If \code{TRUE}, each progeny ID is
-excluded from its own candidate parent set, preventing self-matches when
-progeny are also present in the parents file. Default is \code{TRUE}.}
+\item{exclude_self_match}{Logical. If TRUE, each progeny ID is excluded from
+its own candidate parent set, preventing self-matches when progeny are also
+present in the parents file. Default is TRUE.}
 
-\item{verbose}{Logical. If \code{TRUE}, prints progress and summary.
-Default is \code{TRUE}.}
+\item{verbose}{Logical. If TRUE, prints progress and summary. Default is TRUE.}
 
-\item{plot_results}{Logical. If \code{TRUE}, plots the Mendelian error
-distribution. Requires \code{ggplot2}. Default is \code{TRUE}.}
+\item{plot_results}{Logical. If TRUE, plots the Mendelian error distribution.
+Requires ggplot2. Default is TRUE.}
 }
 \value{
 A named list (returned invisibly) with elements:
@@ -70,6 +68,17 @@ A named list (returned invisibly) with elements:
 Assigns the most likely parent(s) to each progeny from SNP genotype data
 using Mendelian error rates or homozygous mismatch rates. Parents or progeny
 absent from the genotype file are removed with a warning.
+}
+\examples{
+\dontrun{
+results <- find_parentage(
+  genotypes_file = "genotypes.txt",
+  parents_file   = "parents.txt",
+  progeny_file   = "progeny.txt",
+  method         = "best_pair"
+)
+}
+
 }
 \author{
 Josue Chinchilla-Vargas

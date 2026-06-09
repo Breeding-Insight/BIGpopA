@@ -16,7 +16,8 @@ check_ped(
 \item{ped.file}{Path to the pedigree text file (TSV/CSV/TXT), OR a
 data.frame / data.table with columns: id, male_parent, female_parent.}
 
-\item{seed}{Optional integer seed for reproducibility.}
+\item{seed}{Optional integer seed for reproducibility. Pass NULL (default)
+to skip setting a seed.}
 
 \item{verbose}{Logical. If TRUE (default), prints the report to the console.}
 
@@ -46,15 +47,24 @@ roles are corrected when their respective arguments are TRUE. Cycles are
 reported only and must be resolved manually.
 }
 \examples{
-ped_file <- system.file("check_ped_test.txt", package = "BIGpopA")
-ped_errors <- check_ped(ped.file = ped_file, seed = 101919, verbose = FALSE)
+# Self-contained example using a data.frame
+ped_df <- data.frame(
+  id            = c("A", "B", "C", "C", "D"),
+  male_parent   = c("0", "0", "A", "A", "B"),
+  female_parent = c("0", "0", "B", "B", "C"),
+  stringsAsFactors = FALSE
+)
+ped_errors <- check_ped(ped.file = ped_df, seed = 101919, verbose = FALSE)
+names(ped_errors)
+head(ped_errors$corrected_pedigree)
 
-# Also accepts a data.table directly
+\dontrun{
 library(data.table)
-ped_dt <- data.table(id = c("A","B","C"),
-                     male_parent   = c("0","0","A"),
-                     female_parent = c("0","0","B"))
+ped_dt <- data.table(id = c("A", "B", "C"),
+                     male_parent   = c("0", "0", "A"),
+                     female_parent = c("0", "0", "B"))
 ped_errors <- check_ped(ped.file = ped_dt, verbose = FALSE)
+}
 
 }
 \author{

@@ -40,9 +40,19 @@
 #'   \item{plot}{ggplot object if plot_results = TRUE, otherwise NULL.}
 #' }
 #'
+#' @examples
+#' \dontrun{
+#' results <- validate_pedigree(
+#'   pedigree_file   = "pedigree.txt",
+#'   genotypes_file  = "genotypes.txt"
+#' )
+#' }
+#'
 #' @author Josue Chinchilla-Vargas
 #'
 #' @importFrom data.table fread copy data.table set rbindlist as.data.table is.data.table
+#' @importFrom dplyr case_when
+#' @importFrom ggplot2 ggplot aes geom_histogram geom_vline scale_x_continuous scale_y_continuous scale_fill_manual labs theme_classic theme
 #' @export
 validate_pedigree <- function(pedigree_file, genotypes_file,
                               founders_file                 = NULL,

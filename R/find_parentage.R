@@ -11,25 +11,23 @@
 #'   ('M', 'F', or 'A'). If absent, all parents are treated as ambiguous.
 #' @param progeny_file Path to a TSV/CSV/TXT file, OR a data.frame /
 #'   data.table with an 'id' column.
-#' @param method Character. One of \code{"best_male_parent"},
-#'   \code{"best_female_parent"}, \code{"best_match"}, or
-#'   \code{"best_pair"} (default).
+#' @param method Character. One of "best_male_parent", "best_female_parent",
+#'   "best_match", or "best_pair" (default).
 #' @param min_markers Integer. Minimum markers required; fewer flags
-#'   \code{low_markers} (default: \code{10}).
+#'   low_markers (default: 10).
 #' @param error_threshold Numeric. Maximum mismatch percentage; exceeded values
-#'   flag \code{high_error} (default: \code{5.0}). Must be between 0 and 100.
-#' @param show_ties Logical. If \code{TRUE}, tied best pairs are appended as
-#'   suffix columns. Default is \code{TRUE}.
-#' @param allow_parent_selfing Logical. If \code{FALSE}, candidate pairs with
-#'   identical male and female parent IDs are excluded. Applies only when
-#'   \code{method = "best_pair"}. Default is \code{FALSE}.
-#' @param exclude_self_match Logical. If \code{TRUE}, each progeny ID is
-#'   excluded from its own candidate parent set, preventing self-matches when
-#'   progeny are also present in the parents file. Default is \code{TRUE}.
-#' @param verbose Logical. If \code{TRUE}, prints progress and summary.
-#'   Default is \code{TRUE}.
-#' @param plot_results Logical. If \code{TRUE}, plots the Mendelian error
-#'   distribution. Requires \code{ggplot2}. Default is \code{TRUE}.
+#'   flag high_error (default: 5.0). Must be between 0 and 100.
+#' @param show_ties Logical. If TRUE, tied best pairs are appended as suffix
+#'   columns. Default is TRUE.
+#' @param allow_parent_selfing Logical. If FALSE, candidate pairs with identical
+#'   male and female parent IDs are excluded. Applies only when method is
+#'   "best_pair". Default is FALSE.
+#' @param exclude_self_match Logical. If TRUE, each progeny ID is excluded from
+#'   its own candidate parent set, preventing self-matches when progeny are also
+#'   present in the parents file. Default is TRUE.
+#' @param verbose Logical. If TRUE, prints progress and summary. Default is TRUE.
+#' @param plot_results Logical. If TRUE, plots the Mendelian error distribution.
+#'   Requires ggplot2. Default is TRUE.
 #'
 #' @return A named list (returned invisibly) with elements:
 #' \describe{
@@ -40,9 +38,20 @@
 #'   \item{plot}{ggplot object if plot_results = TRUE, otherwise NULL.}
 #' }
 #'
+#' @examples
+#' \dontrun{
+#' results <- find_parentage(
+#'   genotypes_file = "genotypes.txt",
+#'   parents_file   = "parents.txt",
+#'   progeny_file   = "progeny.txt",
+#'   method         = "best_pair"
+#' )
+#' }
+#'
 #' @author Josue Chinchilla-Vargas
 #'
 #' @importFrom data.table fread copy CJ rbindlist set data.table as.data.table is.data.table
+#' @importFrom ggplot2 ggplot aes geom_histogram geom_vline scale_x_continuous scale_y_continuous scale_fill_manual labs theme_classic theme
 #' @export
 find_parentage <- function(genotypes_file, parents_file, progeny_file,
                            method                = "best_pair",
