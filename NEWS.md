@@ -1,5 +1,7 @@
-# BIGpopA 1.0.2
+# BIGpopA 1.0.3
 - Fixed typo on repo name and patched find_parentage
+- Removed /dev from repository
+- Added words to WORDLIST
 
 
 # BIGpopA 1.0.2
