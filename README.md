@@ -10,7 +10,7 @@
 
   <img width="250" height="250" alt="BIGpopa_logo" src="https://github.com/user-attachments/assets/6f621288-f131-4ca9-ba8a-451bdf8511df" />
 
-
+# Breeding Insight Genomics population Analyses
 ### Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
 BIGpopA is an R package developed by [Breeding Insight](https://breedinginsight.org/) that provides tools for pedigree quality control and genomic breed/line composition estimation in diploid and polyploid breeding populations. It is designed to help researchers and breeders identify pedigree errors, assign parentage from SNP genotype data, and estimate genome-wide breed or line composition.
 
