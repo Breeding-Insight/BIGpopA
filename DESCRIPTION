@@ -1,6 +1,6 @@
 Package: BIGpopA
 Title: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
-Version: 1.0.2
+Version: 1.0.3
 Authors@R: c(person(given='Josue',
                     family='Chinchilla-Vargas',
                     email='josue.chinchilla@ufl.edu',
@@ -18,9 +18,8 @@ Description: Tools for pedigree quality control and genomic breed/line
     errors, assign parentage from SNP genotype data using Mendelian error
     rates, validate parent-offspring trios, and estimate genome-wide
     breed or line composition using quadratic programming. Supports both
-    diploid and polyploid species. For details on the composition
-    estimation methods, see Funkhouser et al. (2017)
-    <doi:10.2527/tas2016.0003>.
+    diploid and polyploid species. For more details about the included 'breedTools' 
+    functions, see Funkhouser et al. (2017) <doi:10.2527/tas2016.0003>.
 License: Apache License (>= 2)
 URL: https://github.com/Breeding-Insight/BIGpopA
 BugReports: https://github.com/Breeding-Insight/BIGpopA/issues
