@@ -1,6 +1,6 @@
 Package: BIGpopA
-Title: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species
-Version: 1.0.4
+Title: Pedigree Validation Genetic Composition of Diploids & Polyploids
+Version: 1.0.5
 Authors@R: c(person(given='Josue',
                     family='Chinchilla-Vargas',
                     email='josue.chinchilla@ufl.edu',

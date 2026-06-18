@@ -58,7 +58,7 @@ ped_errors <- check_ped(ped.file = ped_df, seed = 101919, verbose = FALSE)
 names(ped_errors)
 head(ped_errors$corrected_pedigree)
 
-\dontrun{
+\donttest{
 library(data.table)
 ped_dt <- data.table(id = c("A", "B", "C"),
                      male_parent   = c("0", "0", "A"),

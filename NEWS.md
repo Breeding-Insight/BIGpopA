@@ -1,3 +1,6 @@
+# BIGpopA 1.0.5
+- Updated package title and example on function descriptions to pass CRAN review
+
 # BIGpopA 1.0.4
 - Removed LICENSE file to pass CRAN automated tests
 
