@@ -19,9 +19,13 @@
 BIGpopA is an R package developed by [Breeding Insight](https://breedinginsight.org/) that provides tools for pedigree quality control and genomic breed/line composition estimation in diploid and polyploid breeding populations. It is designed to help researchers and breeders identify pedigree errors, assign parentage from SNP genotype data, and estimate genome-wide breed or line composition.
 
 ### Installation
+To install the latest CRAN version of BIGpopA:
 
+```R
+install.packages("BIGpopA")
+library(BIGpopA)
+```
 To install the development version of BIGpopA, install from GitHub using `remotes`:
-
 ```R
 install.packages("remotes")
 remotes::install_github("Breeding-Insight/BIGpopA", dependencies = TRUE)
