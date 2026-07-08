@@ -70,13 +70,41 @@ using Mendelian error rates or homozygous mismatch rates. Parents or progeny
 absent from the genotype file are removed with a warning.
 }
 \examples{
-\dontrun{
-results <- find_parentage(
-  genotypes_file = "genotypes.txt",
-  parents_file   = "parents.txt",
-  progeny_file   = "progeny.txt",
-  method         = "best_pair"
+\donttest{
+geno_df <- data.frame(
+  id  = c("P1", "P2", "P3", "Off1", "Off2"),
+  S1  = c(0L, 2L, 0L, 1L, 0L),
+  S2  = c(2L, 0L, 2L, 1L, 2L),
+  S3  = c(0L, 2L, 0L, 1L, 0L),
+  S4  = c(2L, 0L, 2L, 1L, 2L),
+  S5  = c(0L, 2L, 0L, 1L, 0L),
+  S6  = c(2L, 0L, 2L, 1L, 2L),
+  S7  = c(0L, 2L, 0L, 1L, 0L),
+  S8  = c(2L, 0L, 2L, 1L, 2L),
+  S9  = c(0L, 2L, 0L, 1L, 0L),
+  S10 = c(2L, 0L, 2L, 1L, 2L)
 )
+
+parents_df <- data.frame(
+  id  = c("P1", "P2", "P3"),
+  sex = c("M",  "F",  "F"),
+  stringsAsFactors = FALSE
+)
+
+progeny_df <- data.frame(
+  id = c("Off1", "Off2"),
+  stringsAsFactors = FALSE
+)
+
+results <- find_parentage(
+  genotypes_file = geno_df,
+  parents_file   = parents_df,
+  progeny_file   = progeny_df,
+  method         = "best_pair",
+  verbose        = FALSE,
+  plot_results   = FALSE
+)
+print(results$full_results)
 }
 
 }

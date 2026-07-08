@@ -66,11 +66,35 @@ supplied. Trios absent from the genotype file are retained as
 no_genotype_data.
 }
 \examples{
-\dontrun{
-results <- validate_pedigree(
-  pedigree_file   = "pedigree.txt",
-  genotypes_file  = "genotypes.txt"
+\donttest{
+geno_df <- data.frame(
+  id  = c("P1", "P2", "P3", "Off1", "Off2"),
+  S1  = c(0L, 2L, 0L, 1L, 0L),
+  S2  = c(2L, 0L, 2L, 1L, 2L),
+  S3  = c(0L, 2L, 0L, 1L, 0L),
+  S4  = c(2L, 0L, 2L, 1L, 2L),
+  S5  = c(0L, 2L, 0L, 1L, 0L),
+  S6  = c(2L, 0L, 2L, 1L, 2L),
+  S7  = c(0L, 2L, 0L, 1L, 0L),
+  S8  = c(2L, 0L, 2L, 1L, 2L),
+  S9  = c(0L, 2L, 0L, 1L, 0L),
+  S10 = c(2L, 0L, 2L, 1L, 2L)
 )
+
+ped_df <- data.frame(
+  id            = c("Off1", "Off2"),
+  male_parent   = c("P1",   "P1"),
+  female_parent = c("P2",   "P3"),
+  stringsAsFactors = FALSE
+)
+
+results <- validate_pedigree(
+  pedigree_file  = ped_df,
+  genotypes_file = geno_df,
+  verbose        = FALSE,
+  plot_results   = FALSE
+)
+print(results$full_results)
 }
 
 }

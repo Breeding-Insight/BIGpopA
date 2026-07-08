@@ -1,5 +1,13 @@
-# BIGpopA 1.0.2
+# BIGpopA 1.0.5
+- Updated package title and example on function descriptions to pass CRAN review
+
+# BIGpopA 1.0.4
+- Removed LICENSE file to pass CRAN automated tests
+
+# BIGpopA 1.0.3
 - Fixed typo on repo name and patched find_parentage
+- Removed /dev from repository
+- Added words to WORDLIST
 
 
 # BIGpopA 1.0.2
