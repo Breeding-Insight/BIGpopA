@@ -4,8 +4,10 @@
 
 * This is a new release.
 
-## This is a resubmission
-* Initial submission was rejected because of LICENSE file in the repository.
+## Resubmission
 
-##This is a resubmission
-* Previous submission passed automated checks and got returned with comments that have now been addressed.
+This is a resubmission. In this version I have:
+
+* Removed the LICENSE file from the repository, which caused the initial submission to be rejected.
+* Addressed the reviewer comments returned after the previous submission passed the automated checks.
+* Added a "BIGpopA Tutorial" vignette demonstrating the package workflow.

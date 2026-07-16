@@ -39,4 +39,4 @@ BIGpopA development is supported by Breeding Insight, a USDA-funded initiative b
 ## Citation
 If you use BIGpopA in your research, please cite as:
 
-Chinchilla-Vargas, Josue, and Breeding Insight Team. 2025. "BIGpopA: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species." https://github.com/Breeding-Insight/BIGpopA.
+Chinchilla-Vargas, Josue, and Breeding Insight Team. 2026. "BIGpopA: Pedigree Validation and Breed/Line Composition Estimation for Diploid and Polyploid Species." R package version 1.0.5. https://github.com/Breeding-Insight/BIGpopA.
