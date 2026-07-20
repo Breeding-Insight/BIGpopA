@@ -291,5 +291,5 @@ citation("BIGpopA")
 
 # Acknowledgments
 
-Developed as part of the [Breeding Insight](https://www.breedinginsight.org)
+Developed as part of the [Breeding Insight](https://breedinginsight.org/)
 initiative to provide open-source, data-driven tools for modern breeding programs.
