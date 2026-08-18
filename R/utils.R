@@ -13,6 +13,54 @@ utils::globalVariables(c(
   "QPseparate", "QPsolve_par"
 ))
 
+#### Ploidy-general Mendelian consistency helpers ####
+
+#' Gamete allele-dosage bounds
+#'
+#' Lower/upper bound on the number of B alleles a balanced gamete can carry
+#' for a parent of dosage \code{g} at an even \code{ploidy}. Assumes polysomic
+#' (autopolyploid) inheritance: random chromosome segregation, no double
+#' reduction. For allopolyploids (disomic inheritance) these bounds are a
+#' conservative superset, so correct trios are never wrongly flagged, but some
+#' true errors may go undetected.
+#'
+#' @param g numeric vector or matrix of parental dosages (0..ploidy).
+#' @param ploidy even integer ploidy level.
+#' @return Object matching \code{g} holding the gamete dosage bound.
+#' @noRd
+.gamete_lo <- function(g, ploidy) base::pmax(0L, g - ploidy / 2L)
+.gamete_hi <- function(g, ploidy) base::pmin(ploidy / 2L, g)
+
+#' Flag impossible offspring dosages
+#'
+#' Returns TRUE where an offspring dosage cannot arise from the two parental
+#' dosages under polysomic inheritance. Operates elementwise on vectors or
+#' matrices and reduces exactly to the diploid 0/1/2 rules when ploidy = 2.
+#'
+#' @param male,female,offspring numeric vectors/matrices of dosages, aligned.
+#' @param ploidy even integer ploidy level.
+#' @return Logical object matching the inputs (TRUE = Mendelian error).
+#' @noRd
+mendelian_error <- function(male, female, offspring, ploidy) {
+  lo <- .gamete_lo(male, ploidy) + .gamete_lo(female, ploidy)
+  hi <- .gamete_hi(male, ploidy) + .gamete_hi(female, ploidy)
+  (offspring < lo) | (offspring > hi)
+}
+
+#' Validate a ploidy argument
+#'
+#' Stops if \code{ploidy} is not an even integer >= 2.
+#'
+#' @param ploidy value supplied by the user.
+#' @return Invisibly TRUE if valid; otherwise an error is thrown.
+#' @noRd
+.check_ploidy <- function(ploidy) {
+  if (base::length(ploidy) != 1 || !base::is.numeric(ploidy) ||
+      base::is.na(ploidy) || ploidy < 2 || ploidy %% 2 != 0)
+    base::stop("ploidy must be an even integer >= 2.")
+  base::invisible(TRUE)
+}
+
 #'
 #' Performs whole genome breed composition prediction.
 #'

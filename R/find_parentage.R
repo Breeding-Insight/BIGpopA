@@ -28,6 +28,11 @@
 #' @param verbose Logical. If TRUE, prints progress and summary. Default is TRUE.
 #' @param plot_results Logical. If TRUE, plots the Mendelian error distribution.
 #'   Requires ggplot2. Default is TRUE.
+#' @param ploidy Integer. Even ploidy level of the species (2 = diploid,
+#'   4 = tetraploid, ...). Genotypes must be coded as allele-B dosage
+#'   (0, 1, ..., ploidy). Assumes polysomic (autopolyploid) inheritance; for
+#'   allopolyploids the Mendelian check is conservative (correct trios are
+#'   never wrongly flagged, but some true errors may be missed). Default is 2.
 #'
 #' @return A named list (returned invisibly) with elements:
 #' \describe{
@@ -89,7 +94,8 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
                            allow_parent_selfing   = FALSE,
                            exclude_self_match    = TRUE,
                            verbose               = TRUE,
-                           plot_results          = TRUE) {
+                           plot_results          = TRUE,
+                           ploidy                = 2) {
   
   ## silence R CMD check NOTEs
   id <- sex <- male_parent <- female_parent <- NULL
@@ -104,7 +110,8 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
     stop("min_markers must be a positive integer.")
   if (error_threshold < 0 || error_threshold > 100)
     stop("error_threshold must be between 0 and 100.")
-  
+  .check_ploidy(ploidy)
+
   # Accept file path OR in-memory data.frame / data.table
   read_flex <- function(x, label, ...) {
     if (is.character(x) && length(x) == 1) {
@@ -167,7 +174,7 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
   genos_hom   <- data.table::copy(genos)
   marker_cols <- base::setdiff(base::names(genos_hom), "id")
   for (col in marker_cols)
-    genos_hom[base::get(col) == 1, (col) := NA_integer_]
+    genos_hom[base::get(col) > 0 & base::get(col) < ploidy, (col) := NA_integer_]
   genos_hom_mat <- base::as.matrix(genos_hom, rownames = "id")
   
   #### Status helper ####
@@ -254,14 +261,8 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
                                          ncol = base::ncol(progeny_mat),
                                          byrow = TRUE)
         base::rowSums(
-          (male_parent_genos_mat == 0 & female_parent_genos_mat == 0 & progeny_pair_mat >  0) |
-            (male_parent_genos_mat == 2 & female_parent_genos_mat == 2 & progeny_pair_mat <  2) |
-            ((male_parent_genos_mat == 0 & female_parent_genos_mat == 1) |
-               (male_parent_genos_mat == 1 & female_parent_genos_mat == 0)) & (progeny_pair_mat == 2) |
-            ((male_parent_genos_mat == 2 & female_parent_genos_mat == 1) |
-               (male_parent_genos_mat == 1 & female_parent_genos_mat == 2)) & (progeny_pair_mat == 0) |
-            ((male_parent_genos_mat == 0 & female_parent_genos_mat == 2) |
-               (male_parent_genos_mat == 2 & female_parent_genos_mat == 0)) & (progeny_pair_mat != 1),
+          mendelian_error(male_parent_genos_mat, female_parent_genos_mat,
+                          progeny_pair_mat, ploidy),
           na.rm = TRUE
         )
       }, numeric(n_pairs)),
