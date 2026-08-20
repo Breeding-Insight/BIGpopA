@@ -12,7 +12,8 @@ validate_pedigree(
   min_markers = 10,
   single_parent_error_threshold = 2,
   verbose = TRUE,
-  plot_results = TRUE
+  plot_results = TRUE,
+  ploidy = 2
 )
 }
 \arguments{
@@ -42,6 +43,12 @@ the console (default: TRUE).}
 
 \item{plot_results}{Logical. If TRUE, prints a histogram of trio Mendelian
 error percentages with a threshold line (default: TRUE).}
+
+\item{ploidy}{Integer. Even ploidy level of the species (2 = diploid,
+4 = tetraploid, ...). Genotypes must be coded as allele-B dosage
+(0, 1, ..., ploidy). Assumes polysomic (autopolyploid) inheritance; for
+allopolyploids the Mendelian check is conservative (correct trios are
+never wrongly flagged, but some true errors may be missed). Default is 2.}
 }
 \value{
 An invisible named list with the following elements:

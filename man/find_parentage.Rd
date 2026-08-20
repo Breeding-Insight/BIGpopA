@@ -15,7 +15,8 @@ find_parentage(
   allow_parent_selfing = FALSE,
   exclude_self_match = TRUE,
   verbose = TRUE,
-  plot_results = TRUE
+  plot_results = TRUE,
+  ploidy = 2
 )
 }
 \arguments{
@@ -53,6 +54,12 @@ present in the parents file. Default is TRUE.}
 
 \item{plot_results}{Logical. If TRUE, plots the Mendelian error distribution.
 Requires ggplot2. Default is TRUE.}
+
+\item{ploidy}{Integer. Even ploidy level of the species (2 = diploid,
+4 = tetraploid, ...). Genotypes must be coded as allele-B dosage
+(0, 1, ..., ploidy). Assumes polysomic (autopolyploid) inheritance; for
+allopolyploids the Mendelian check is conservative (correct trios are
+never wrongly flagged, but some true errors may be missed). Default is 2.}
 }
 \value{
 A named list (returned invisibly) with elements:
