@@ -44,11 +44,13 @@ the console (default: TRUE).}
 \item{plot_results}{Logical. If TRUE, prints a histogram of trio Mendelian
 error percentages with a threshold line (default: TRUE).}
 
-\item{ploidy}{Integer. Even ploidy level of the species (2 = diploid,
+\item{ploidy}{Integer >= 2. Ploidy level of the species (2 = diploid,
 4 = tetraploid, ...). Genotypes must be coded as allele-B dosage
-(0, 1, ..., ploidy). Assumes polysomic (autopolyploid) inheritance; for
-allopolyploids the Mendelian check is conservative (correct trios are
-never wrongly flagged, but some true errors may be missed). Default is 2.}
+(0, 1, ..., ploidy). Even ploidy uses the polysomic gamete-range Mendelian
+test (assumes autopolyploid inheritance; conservative for allopolyploids).
+Odd ploidy (e.g. triploid), where balanced gametes are undefined, falls
+back to a model-free opposite-homozygote exclusion evaluated on
+homozygous-informative markers only (reduced power). Default is 2.}
 }
 \value{
 An invisible named list with the following elements:
