@@ -47,17 +47,59 @@ mendelian_error <- function(male, female, offspring, ploidy) {
   (offspring < lo) | (offspring > hi)
 }
 
+#' Per-marker Mendelian mismatch indicator
+#'
+#' Dispatches on ploidy parity. Even ploidy uses the polysomic gamete-range
+#' test (\code{mendelian_error}), which draws on all co-genotyped markers and
+#' both parents jointly. Odd ploidy (e.g. triploid), where balanced gametes are
+#' undefined, falls back to a model-free opposite-homozygote exclusion: a marker
+#' is a mismatch only when the offspring is homozygous and one parent is the
+#' opposite homozygote. Reduces exactly to the even-ploidy test when ploidy is
+#' even.
+#'
+#' @param male,female,offspring dosage vectors/matrices (0..ploidy), aligned.
+#' @param ploidy integer ploidy level.
+#' @return Logical object matching the inputs (TRUE = mismatch).
+#' @noRd
+.mend_mismatch <- function(male, female, offspring, ploidy) {
+  if (ploidy %% 2 == 0)
+    return(mendelian_error(male, female, offspring, ploidy))
+  o_hom <- offspring == 0 | offspring == ploidy
+  ((male   == 0 | male   == ploidy) & male   != offspring & o_hom) |
+    ((female == 0 | female == ploidy) & female != offspring & o_hom)
+}
+
+#' Per-marker testability indicator
+#'
+#' Companion to \code{.mend_mismatch} giving the markers that can return a
+#' verdict. Even ploidy counts every co-genotyped marker; odd ploidy counts only
+#' markers where the offspring is homozygous and at least one parent is
+#' homozygous (the homozygosity-informative set).
+#'
+#' @param male,female,offspring dosage vectors/matrices (0..ploidy), aligned.
+#' @param ploidy integer ploidy level.
+#' @return Logical object matching the inputs (TRUE = testable).
+#' @noRd
+.mend_testable <- function(male, female, offspring, ploidy) {
+  if (ploidy %% 2 == 0)
+    return(!base::is.na(male) & !base::is.na(female) & !base::is.na(offspring))
+  o_hom <- !base::is.na(offspring) & (offspring == 0 | offspring == ploidy)
+  m_hom <- !base::is.na(male)   & (male   == 0 | male   == ploidy)
+  f_hom <- !base::is.na(female) & (female == 0 | female == ploidy)
+  o_hom & (m_hom | f_hom)
+}
+
 #' Validate a ploidy argument
 #'
-#' Stops if \code{ploidy} is not an even integer >= 2.
+#' Stops if \code{ploidy} is not an integer >= 2.
 #'
 #' @param ploidy value supplied by the user.
 #' @return Invisibly TRUE if valid; otherwise an error is thrown.
 #' @noRd
 .check_ploidy <- function(ploidy) {
   if (base::length(ploidy) != 1 || !base::is.numeric(ploidy) ||
-      base::is.na(ploidy) || ploidy < 2 || ploidy %% 2 != 0)
-    base::stop("ploidy must be an even integer >= 2.")
+      base::is.na(ploidy) || ploidy < 2 || ploidy != base::round(ploidy))
+    base::stop("ploidy must be an integer >= 2.")
   base::invisible(TRUE)
 }
 

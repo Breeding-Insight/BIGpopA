@@ -26,11 +26,13 @@
 #'   the console (default: TRUE).
 #' @param plot_results Logical. If TRUE, prints a histogram of trio Mendelian
 #'   error percentages with a threshold line (default: TRUE).
-#' @param ploidy Integer. Even ploidy level of the species (2 = diploid,
+#' @param ploidy Integer >= 2. Ploidy level of the species (2 = diploid,
 #'   4 = tetraploid, ...). Genotypes must be coded as allele-B dosage
-#'   (0, 1, ..., ploidy). Assumes polysomic (autopolyploid) inheritance; for
-#'   allopolyploids the Mendelian check is conservative (correct trios are
-#'   never wrongly flagged, but some true errors may be missed). Default is 2.
+#'   (0, 1, ..., ploidy). Even ploidy uses the polysomic gamete-range Mendelian
+#'   test (assumes autopolyploid inheritance; conservative for allopolyploids).
+#'   Odd ploidy (e.g. triploid), where balanced gametes are undefined, falls
+#'   back to a model-free opposite-homozygote exclusion evaluated on
+#'   homozygous-informative markers only (reduced power). Default is 2.
 #'
 #' @return An invisible named list with the following elements:
 #' \describe{
@@ -238,13 +240,14 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
         male_parent_vec   <- genos_mat[male_parent_id, ]
         female_parent_vec <- genos_mat[female_parent_id, ]
         mismatches <- base::sum(
-          mendelian_error(male_parent_vec, female_parent_vec,
-                          progeny_vec, ploidy),
+          .mend_mismatch(male_parent_vec, female_parent_vec,
+                         progeny_vec, ploidy),
           na.rm = TRUE
         )
-        markers_tested <- base::sum(!base::is.na(male_parent_vec) &
-                                      !base::is.na(female_parent_vec) &
-                                      !base::is.na(progeny_vec))
+        markers_tested <- base::sum(
+          .mend_testable(male_parent_vec, female_parent_vec,
+                         progeny_vec, ploidy)
+        )
         if (markers_tested == 0) {
           status              <- "no_data"
           correction_decision <- "none"

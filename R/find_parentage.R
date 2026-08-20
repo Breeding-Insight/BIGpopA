@@ -28,11 +28,13 @@
 #' @param verbose Logical. If TRUE, prints progress and summary. Default is TRUE.
 #' @param plot_results Logical. If TRUE, plots the Mendelian error distribution.
 #'   Requires ggplot2. Default is TRUE.
-#' @param ploidy Integer. Even ploidy level of the species (2 = diploid,
+#' @param ploidy Integer >= 2. Ploidy level of the species (2 = diploid,
 #'   4 = tetraploid, ...). Genotypes must be coded as allele-B dosage
-#'   (0, 1, ..., ploidy). Assumes polysomic (autopolyploid) inheritance; for
-#'   allopolyploids the Mendelian check is conservative (correct trios are
-#'   never wrongly flagged, but some true errors may be missed). Default is 2.
+#'   (0, 1, ..., ploidy). Even ploidy uses the polysomic gamete-range Mendelian
+#'   test (assumes autopolyploid inheritance; conservative for allopolyploids).
+#'   Odd ploidy (e.g. triploid), where balanced gametes are undefined, falls
+#'   back to a model-free opposite-homozygote exclusion evaluated on
+#'   homozygous-informative markers only (reduced power). Default is 2.
 #'
 #' @return A named list (returned invisibly) with elements:
 #' \describe{
@@ -261,8 +263,8 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
                                          ncol = base::ncol(progeny_mat),
                                          byrow = TRUE)
         base::rowSums(
-          mendelian_error(male_parent_genos_mat, female_parent_genos_mat,
-                          progeny_pair_mat, ploidy),
+          .mend_mismatch(male_parent_genos_mat, female_parent_genos_mat,
+                         progeny_pair_mat, ploidy),
           na.rm = TRUE
         )
       }, numeric(n_pairs)),
@@ -276,9 +278,10 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
                                          nrow = n_pairs,
                                          ncol = base::ncol(progeny_mat),
                                          byrow = TRUE)
-        base::rowSums(!base::is.na(male_parent_genos_mat) &
-                        !base::is.na(female_parent_genos_mat) &
-                        !base::is.na(progeny_pair_mat))
+        base::rowSums(
+          .mend_testable(male_parent_genos_mat, female_parent_genos_mat,
+                         progeny_pair_mat, ploidy)
+        )
       }, numeric(n_pairs)),
       nrow = n_pairs, ncol = n_progeny
     )
