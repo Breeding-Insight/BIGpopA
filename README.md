@@ -10,7 +10,7 @@
 <!-- badges: end -->
 
 <div align="center">
-  <img width="250" height="250" alt="BIGpopa_logo" src="https://github.com/user-attachments/assets/3560cb73-6939-4af6-ab41-045b8a1598c3" />
+  <img width="250" height="250" alt="BIGpopa_logo" src="man/figures/BIGpopa_logo.png" />
 </div>
 
 
