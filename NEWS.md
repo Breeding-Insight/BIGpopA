@@ -5,6 +5,7 @@
 - When the reference panel is a `.ped` file, `allele_freq_poly()` stores the counted allele per marker and `solve_composition_poly()` uses it to code a validation `.ped` file consistently.
 - `allele_freq_poly()` and `solve_composition_poly()` also accept a data.frame with an `id` / `ID` column; existing matrix and row-named data.frame inputs are unchanged.
 - Genotype read errors in `find_parentage()` and `validate_pedigree()` now include the underlying error message.
+- Column names `id`, `male_parent`, `female_parent` and `sex` are now matched ignoring case, spaces and dots (e.g. `ID`, `Male_Parent`, `FEMALE PARENT`) in `check_ped()`, `validate_pedigree()`, `find_parentage()` and genotype tables.
 - Fixed `solve_composition_poly()` failing when `Y` contains a single animal.
 - Removed the `ped`, `groups`, `mia`, `sire` and `dam` arguments from `solve_composition_poly()`. They relied on internal helpers that were not carried over from BIGr and always failed. The function now takes `Y`, `X` and `ploidy`.
 

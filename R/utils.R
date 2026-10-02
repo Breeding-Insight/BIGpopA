@@ -100,6 +100,54 @@ mendelian_error <- function(male, female, offspring, ploidy) {
   base::invisible(TRUE)
 }
 
+#### Column name helpers ####
+
+#' Normalize a column name for matching
+#'
+#' Lower-cases and trims a name and turns spaces, dots and dashes into
+#' underscores, so "ID", "Male Parent" and "female.parent" match "id",
+#' "male_parent" and "female_parent".
+#'
+#' @param x character vector of column names.
+#' @return Normalized character vector.
+#' @noRd
+.normalize_name <- function(x) {
+  base::gsub("[ .-]+", "_", base::tolower(base::trimws(x)))
+}
+
+#' Rename columns to their standard names, ignoring case
+#'
+#' For each standard name in \code{cols} that is not already present, the first
+#' column whose normalized name matches it is renamed. Other columns (e.g.
+#' marker names) are left untouched. data.tables are copied first so the
+#' caller's object is never modified by reference.
+#'
+#' @param x data.frame or data.table.
+#' @param cols character vector of standard column names.
+#' @return \code{x} with matching columns renamed.
+#' @noRd
+.standardize_names <- function(x, cols) {
+  nm   <- base::names(x)
+  norm <- .normalize_name(nm)
+  old  <- new <- base::character(0)
+  for (col in cols) {
+    if (col %in% nm) next
+    hit <- base::which(norm == col & !(nm %in% old))
+    if (base::length(hit) >= 1) {
+      old <- c(old, nm[hit[1]])
+      new <- c(new, col)
+    }
+  }
+  if (base::length(old) == 0) return(x)
+  if (data.table::is.data.table(x)) {
+    x <- data.table::copy(x)
+    data.table::setnames(x, old, new)
+  } else {
+    base::names(x)[base::match(old, base::names(x))] <- new
+  }
+  x
+}
+
 #### Genotype input helpers ####
 
 #' Detect the source format of a genotype input
@@ -172,8 +220,11 @@ mendelian_error <- function(male, female, offspring, ploidy) {
     src <- "data.frame"
   }
 
+  # ID column: "id" in any case (id, ID, Id, ...); exact "id" preferred
   id_col <- if (src == "data.frame") {
-    base::intersect(c("id", "ID"), base::names(x))[1]
+    nm  <- base::names(x)
+    hit <- if ("id" %in% nm) "id" else nm[.normalize_name(nm) == "id"]
+    if (base::length(hit) >= 1) hit[1] else NA_character_
   } else {
     NA_character_
   }

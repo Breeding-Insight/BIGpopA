@@ -131,6 +131,8 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
   })
 
   #### Check required columns ####
+  # Column names are matched ignoring case (e.g. ID, Male_Parent, FEMALE_PARENT)
+  pedigree <- .standardize_names(pedigree, c("id", "male_parent", "female_parent"))
   required_ped_cols <- c("id", "male_parent", "female_parent")
   missing_cols <- base::setdiff(required_ped_cols, base::names(pedigree))
   if (base::length(missing_cols) > 0)

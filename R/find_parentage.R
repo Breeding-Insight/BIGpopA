@@ -141,6 +141,10 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
          conditionMessage(e), ")")
   })
   
+  # Column names are matched ignoring case (e.g. ID, Sex)
+  all_parents        <- .standardize_names(all_parents,        c("id", "sex"))
+  progeny_candidates <- .standardize_names(progeny_candidates, "id")
+
   valid_ids       <- genos$id
   removed_parents <- base::setdiff(all_parents$id, valid_ids)
   if (base::length(removed_parents) > 0) {
