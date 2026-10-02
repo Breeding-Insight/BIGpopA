@@ -7,10 +7,7 @@ utils::globalVariables(c(
   "mendelian_error_pct", "plot_status", "status",
   
   # validate_pedigree.R
-  "trio_mendelian_error_pct", "recommended_correction",
-  
-  # breedtools internal helpers
-  "QPseparate", "QPsolve_par"
+  "trio_mendelian_error_pct", "recommended_correction"
 ))
 
 #### Ploidy-general Mendelian consistency helpers ####
@@ -101,6 +98,105 @@ mendelian_error <- function(male, female, offspring, ploidy) {
       base::is.na(ploidy) || ploidy < 2 || ploidy != base::round(ploidy))
     base::stop("ploidy must be an integer >= 2.")
   base::invisible(TRUE)
+}
+
+#### Genotype input helpers ####
+
+#' Detect the source format of a genotype input
+#'
+#' Classifies a genotype input so every exported function can accept the same
+#' set of formats. New file formats are added here and in \code{.read_genotypes}.
+#'
+#' @param x genotype input: file path, vcfR object, data.frame / data.table,
+#'   or matrix.
+#' @return One of "vcf", "plink", "text", "data.frame", or "matrix".
+#' @noRd
+.genotype_source <- function(x) {
+  if (base::inherits(x, "vcfR"))  return("vcf")
+  if (base::is.matrix(x))         return("matrix")
+  if (base::is.data.frame(x))     return("data.frame")
+  if (base::is.character(x) && base::length(x) == 1) {
+    if (base::grepl("\\.vcf(\\.gz)?$", x, ignore.case = TRUE)) return("vcf")
+    if (base::grepl("\\.ped$",         x, ignore.case = TRUE)) return("plink")
+    return("text")
+  }
+  base::stop("Genotypes must be a file path (TXT/TSV/CSV, VCF or PLINK .ped), ",
+             "a vcfR object, a data.frame / data.table, or a matrix.")
+}
+
+#' Read genotypes from any supported input
+#'
+#' Single entry point used by find_parentage(), validate_pedigree(),
+#' allele_freq_poly() and solve_composition_poly(). Text files are read with
+#' data.table::fread(); VCF files (.vcf / .vcf.gz) and vcfR objects are
+#' converted with vcf_to_dosage(); PLINK .ped files with ped_to_dosage();
+#' in-memory objects are passed through.
+#'
+#' @param x genotype input (see \code{.genotype_source}).
+#' @param ploidy integer ploidy passed to vcf_to_dosage(); NULL infers it.
+#'   Must be 2 (or NULL) for PLINK .ped files.
+#' @param format "data.frame" returns a data.table with an id column followed
+#'   by marker columns. "matrix" returns individuals in named rows and markers
+#'   in columns; a data.frame without an id / ID column is returned unchanged
+#'   (row names are assumed to hold the IDs).
+#' @param verbose logical, passed to vcf_to_dosage() / ped_to_dosage().
+#' @param counted_allele named character vector passed to ped_to_dosage() so a
+#'   .ped file is coded like a previous one; ignored for other formats.
+#' @return Genotypes in the requested layout.
+#' @noRd
+.read_genotypes <- function(x, ploidy = NULL,
+                            format         = c("data.frame", "matrix"),
+                            verbose        = FALSE,
+                            counted_allele = NULL) {
+  format <- base::match.arg(format)
+  src    <- .genotype_source(x)
+
+  # VCF: convert straight to the requested layout
+  if (src == "vcf")
+    return(vcf_to_dosage(x, ploidy = ploidy, format = format, verbose = verbose))
+
+  # PLINK .ped: diploid only; a .map next to the file supplies marker names
+  if (src == "plink") {
+    if (!base::is.null(ploidy) && ploidy != 2)
+      base::stop("PLINK .ped files are diploid; use ploidy = 2.")
+    return(ped_to_dosage(x, format = format, counted_allele = counted_allele,
+                         verbose = verbose))
+  }
+
+  # Text file: read to a table, then fall through to the in-memory handling
+  from_text <- src == "text"
+  if (from_text) {
+    if (!base::file.exists(x))
+      base::stop("Genotype file not found: ", x)
+    x   <- data.table::fread(x, sep = "auto", data.table = FALSE)
+    src <- "data.frame"
+  }
+
+  id_col <- if (src == "data.frame") {
+    base::intersect(c("id", "ID"), base::names(x))[1]
+  } else {
+    NA_character_
+  }
+  # Text files have no row names, so the first column holds the IDs
+  if (from_text && format == "matrix" && base::is.na(id_col))
+    id_col <- base::names(x)[1]
+
+  if (format == "data.frame") {
+    if (src == "matrix")
+      return(data.table::as.data.table(x, keep.rownames = "id"))
+    out <- data.table::as.data.table(x)
+    if (!base::is.na(id_col) && id_col != "id")
+      data.table::setnames(out, id_col, "id")
+    return(out)
+  }
+
+  # format == "matrix": individuals in named rows, markers in columns
+  if (src == "matrix" || base::is.na(id_col)) return(x)
+  x   <- base::as.data.frame(x)   # data.table subsetting differs from data.frame
+  ids <- base::as.character(x[[id_col]])
+  x   <- base::as.matrix(x[, base::names(x) != id_col, drop = FALSE])
+  base::rownames(x) <- ids
+  x
 }
 
 #'

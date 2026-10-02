@@ -9,9 +9,12 @@
 #'
 #' @param pedigree_file Path to the pedigree file (TSV/CSV/TXT), OR a
 #'   data.frame / data.table with columns: id, male_parent, female_parent.
-#' @param genotypes_file Path to the genotypes file (TSV/CSV/TXT), OR a
-#'   data.frame / data.table with an id column followed by marker columns
-#'   coded as 0, 1, 2.
+#' @param genotypes_file Genotypes as any of: a path to a TSV/CSV/TXT file; a
+#'   path to a VCF file (`.vcf` or `.vcf.gz`) or a `vcfR` object, converted
+#'   with [vcf_to_dosage()] using `ploidy`; a path to a PLINK `.ped` file
+#'   (diploid only), converted with [ped_to_dosage()]; or a data.frame /
+#'   data.table with an id column followed by marker columns coded as
+#'   allele-B dosage (0, 1, ..., ploidy).
 #' @param founders_file Character, optional. Path to a one-column file listing
 #'   founder IDs. Founders with both parents coded as 0 are left unchanged.
 #'   Defaults to NULL.
@@ -120,9 +123,11 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
 
   tryCatch({
     pedigree <- read_flex(pedigree_file, "pedigree_file", colClasses = "character")
-    genos    <- read_flex(genotypes_file, "genotypes_file")
+    genos    <- .read_genotypes(genotypes_file, ploidy = ploidy,
+                                format = "data.frame", verbose = verbose)
   }, error = function(e) {
-    stop("Error reading input files. Ensure paths are correct and files are TXT/TSV/CSV.")
+    stop("Error reading input files. Ensure paths are correct and files are TXT/TSV/CSV or VCF. (",
+         conditionMessage(e), ")")
   })
 
   #### Check required columns ####

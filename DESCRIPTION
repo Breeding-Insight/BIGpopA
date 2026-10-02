@@ -1,6 +1,6 @@
 Package: BIGpopA
 Title: Pedigree Validation Genetic Composition of Diploids & Polyploids
-Version: 2.0.0
+Version: 2.1.0
 Authors@R: c(person(given='Josue',
                     family='Chinchilla-Vargas',
                     email='josue.chinchilla@ufl.edu',
@@ -40,7 +40,8 @@ Suggests:
     knitr (>= 1.10),
     rmarkdown,
     scales,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    vcfR (>= 1.15.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
