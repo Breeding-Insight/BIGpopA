@@ -1,6 +1,6 @@
 Package: BIGpopA
 Title: Pedigree Validation Genetic Composition of Diploids & Polyploids
-Version: 2.0.0
+Version: 2.1.0
 Authors@R: c(person(given='Josue',
                     family='Chinchilla-Vargas',
                     email='josue.chinchilla@ufl.edu',
@@ -20,8 +20,10 @@ Description: Tools for pedigree quality control and genomic breed/line
     breed or line composition using quadratic programming. Pedigree
     validation and parentage assignment support any ploidy, using a
     polysomic Mendelian test for even ploidy and a homozygosity-based
-    check for odd ploidy. For more details about the included 'breedTools'
-    functions, see Funkhouser et al. (2017) <doi:10.2527/tas2016.0003>.
+    check for odd ploidy. Genotypes can be supplied as dosage tables, VCF
+    files, or 'PLINK' .ped files. For more details about the included
+    'breedTools' functions, see Funkhouser et al. (2017)
+    <doi:10.2527/tas2016.0003>.
 License: Apache License (>= 2)
 URL: https://CRAN.R-project.org/package=BIGpopA,
     https://github.com/Breeding-Insight/BIGpopA
@@ -40,7 +42,8 @@ Suggests:
     knitr (>= 1.10),
     rmarkdown,
     scales,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    vcfR (>= 1.15.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
