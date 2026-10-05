@@ -29,6 +29,7 @@ URL: https://CRAN.R-project.org/package=BIGpopA,
     https://github.com/Breeding-Insight/BIGpopA
 BugReports: https://github.com/Breeding-Insight/BIGpopA/issues
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 Depends: R (>= 4.4.0)
 Imports:
