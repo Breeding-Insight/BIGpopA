@@ -9,3 +9,5 @@
 ^doc$
 ^Meta$
 ^docs$
+^revdep$
+^tests/testthat/Rplots\.pdf$

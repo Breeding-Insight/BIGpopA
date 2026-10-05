@@ -15,7 +15,11 @@ This is a feature update. In this version I have:
   `solve_composition_poly()`. They depended on internal helpers that were not
   included in the package and always returned an error, so no working code
   is affected.
+* Made the `id`, `male_parent`, `female_parent` and `sex` column names
+  case-insensitive in `check_ped()`, `validate_pedigree()`, `find_parentage()`
+  and genotype tables.
 * Fixed `solve_composition_poly()` failing when only one individual is supplied.
+* Examples and tests now remove the temporary files they create.
 
 'vcfR' is in Suggests and is only used by `vcf_to_dosage()`; its examples and
 tests are skipped when it is not installed.
