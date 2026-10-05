@@ -262,7 +262,27 @@ test_that("fail trio with one acceptable parent gets remove_* correction", {
   r   <- out$full_results[id == "IND_D"]
   expect_true(r$recommended_correction %in%
                 c("remove_male_parent", "remove_female_parent", "remove_both",
-                  "keep_both"))
+                  "unresolved"))
+})
+
+test_that("a failing trio whose parents both pass the homozygous check is unresolved", {
+  # Recorded self: P1 x P1, but the offspring is heterozygous where P1 is
+  # homozygous at 10 of 50 markers, so it cannot be a self of P1.
+  p1   <- base::rep(c(0L, 2L), 25)
+  off  <- p1
+  off[1:10] <- 1L
+  geno <- base::data.frame(id = c("P1", "Off"), base::rbind(p1, off), row.names = NULL)
+  base::names(geno)[-1] <- base::paste0("SNP", 1:50)
+  ped  <- base::data.frame(id = "Off", male_parent = "P1", female_parent = "P1")
+
+  out <- validate_pedigree(ped, geno, verbose = FALSE, plot_results = TRUE)
+  r   <- out$full_results[id == "Off"]
+  expect_equal(r$status, "fail")
+  expect_equal(r$recommended_correction, "unresolved")
+  # Pedigree left unchanged for manual review
+  expect_equal(out$corrected_pedigree[id == "Off"]$male_parent, "P1")
+  # Plotted as a failure (grey), not as pass
+  expect_equal(out$plot$data$plot_status[out$plot$data$id == "Off"], "fail_unresolved")
 })
 
 test_that("trio_mendelian_error_pct is 0 for a perfect Mendelian trio", {

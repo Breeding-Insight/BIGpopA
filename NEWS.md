@@ -1,3 +1,7 @@
+# BIGpopA 2.1.1
+- `validate_pedigree()`: a trio that fails the Mendelian error threshold while neither parent fails the single-parent homozygous check now gets `recommended_correction = "unresolved"` instead of `"keep_both"`. This happens, for example, with a recorded self whose offspring carries alleles the parent lacks: the pedigree is wrong, but the faulty parent cannot be identified. These trios are left unchanged in `corrected_pedigree` for manual review.
+- `validate_pedigree()` plot: bars are coloured by trio error first, so no trio above the threshold is shown as Pass. Unresolved trios are shown in grey ("Fail - Parents Unresolved"), and the legend wraps onto two rows so all labels are visible.
+
 # BIGpopA 2.1.0
 - New `vcf_to_dosage()` converts a VCF (`.vcf` / `.vcf.gz`) or `vcfR` object into allele-B dosages for any ploidy, as an `id` + markers table or an individuals x markers matrix.
 - New `ped_to_dosage()` converts a PLINK `.ped` file (diploid) into allele dosages. A `.map` file is optional and only supplies marker names. The counted allele is the alphabetically/numerically last allele at each marker, or can be supplied to code a second file like a first one.

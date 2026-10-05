@@ -50,6 +50,26 @@
 #'   \item{plot}{ggplot object if plot_results = TRUE, otherwise NULL.}
 #' }
 #'
+#' @details The `recommended_correction` column of `full_results` takes these
+#'   values:
+#' \describe{
+#'   \item{none}{Trio passes, or a parent is missing / no genotype data.}
+#'   \item{remove_male_parent, remove_female_parent}{The trio fails and only one
+#'     parent fails the single-parent homozygous check; that parent is set to 0
+#'     in `corrected_pedigree`.}
+#'   \item{remove_both}{The trio fails and both parents fail the homozygous
+#'     check; both are set to 0.}
+#'   \item{unresolved}{The trio fails but neither parent fails the homozygous
+#'     check (for example a recorded self whose offspring carries alleles the
+#'     parent lacks). The pedigree is likely wrong but the faulty parent cannot
+#'     be identified, so `corrected_pedigree` is left unchanged for manual review.}
+#'   \item{keep_both}{Only with low markers: the trio is within the threshold
+#'     and both parents pass.}
+#' }
+#'   Low-marker trios get the same values prefixed with `low_markers_`. In the
+#'   plot, every trio above the error threshold is coloured as a failure;
+#'   unresolved trios are shown in grey.
+#'
 #' @examples
 #' \donttest{
 #' geno_df <- data.frame(
@@ -287,7 +307,11 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
             female_acceptable <- !is.na(female_parent_error_pct) &&
               female_parent_error_pct <= single_parent_error_threshold
             if (male_acceptable && female_acceptable) {
-              correction_decision <- "keep_both"
+              # Neither parent is excluded by the homozygous check. If the trio
+              # still fails (e.g. a recorded self whose offspring carries alleles
+              # absent from the parent), the pedigree is wrong but the faulty
+              # parent cannot be identified: flag it instead of keeping it.
+              correction_decision <- if (error_pct > trio_error_threshold) "unresolved" else "keep_both"
             } else if (male_acceptable && !female_acceptable) {
               correction_decision    <- "remove_female_parent"
               best_f                 <- find_best_parent(prog_id, exclude_ids = c(male_parent_id))
@@ -407,15 +431,17 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
       warning("ggplot2 is required for plot_results = TRUE. Please install it.", call. = FALSE)
     } else {
       plot_df <- final_df[!is.na(final_df$trio_mendelian_error_pct)]
+      # Colour by the trio error first, so no trio above the threshold is shown as pass
       plot_df$plot_status <- dplyr::case_when(
-        plot_df$recommended_correction %in% c("none", "keep_both",
-                                              "low_markers_keep_both")               ~ "pass",
+        plot_df$trio_mendelian_error_pct <= trio_error_threshold                       ~ "pass",
         plot_df$recommended_correction %in% c("remove_male_parent",
                                               "remove_female_parent",
                                               "low_markers_remove_male_parent",
                                               "low_markers_remove_female_parent")    ~ "fail_one_parent",
         plot_df$recommended_correction %in% c("remove_both",
                                               "low_markers_remove_both")             ~ "fail_both_parents",
+        plot_df$recommended_correction %in% c("unresolved",
+                                              "low_markers_unresolved")              ~ "fail_unresolved",
         TRUE                                                                           ~ "other"
       )
       n_total <- nrow(plot_df)
@@ -438,12 +464,15 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
           values = c("pass"              = "#339900",
                      "fail_one_parent"   = "#F1C40F",
                      "fail_both_parents" = "#cc3333",
+                     "fail_unresolved"   = "#808080",
                      "other"             = "#BDC3C7"),
           labels = c("pass"              = "Pass",
                      "fail_one_parent"   = "Fail - One Parent",
                      "fail_both_parents" = "Fail - Both Parents",
+                     "fail_unresolved"   = "Fail - Parents Unresolved",
                      "other"             = "Other")
         ) +
+        ggplot2::guides(fill = ggplot2::guide_legend(nrow = 2)) +   # keeps every label visible
         ggplot2::labs(
           title    = "Trio Mendelian Error Distribution",
           subtitle = paste0("Trios with Genotype Data Tested: ", n_total,
