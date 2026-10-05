@@ -77,6 +77,27 @@ best-matching replacements, and outputs a corrected pedigree. Founder trios
 supplied. Trios absent from the genotype file are retained as
 no_genotype_data.
 }
+\details{
+The \code{recommended_correction} column of \code{full_results} takes these
+values:
+\describe{
+\item{none}{Trio passes, or a parent is missing / no genotype data.}
+\item{remove_male_parent, remove_female_parent}{The trio fails and only one
+parent fails the single-parent homozygous check; that parent is set to 0
+in \code{corrected_pedigree}.}
+\item{remove_both}{The trio fails and both parents fail the homozygous
+check; both are set to 0.}
+\item{unresolved}{The trio fails but neither parent fails the homozygous
+check (for example a recorded self whose offspring carries alleles the
+parent lacks). The pedigree is likely wrong but the faulty parent cannot
+be identified, so \code{corrected_pedigree} is left unchanged for manual review.}
+\item{keep_both}{Only with low markers: the trio is within the threshold
+and both parents pass.}
+}
+Low-marker trios get the same values prefixed with \code{low_markers_}. In the
+plot, every trio above the error threshold is coloured as a failure;
+unresolved trios are shown in grey.
+}
 \examples{
 \donttest{
 geno_df <- data.frame(
