@@ -77,6 +77,8 @@ genotypes <- ped_to_dosage(ped_path, map = NULL, verbose = FALSE)
 print(genotypes)
 attr(genotypes, "counted_allele")
 
+unlink(ped_path)
+
 }
 \seealso{
 \code{\link[=vcf_to_dosage]{vcf_to_dosage()}}, \code{\link[=find_parentage]{find_parentage()}}, \code{\link[=allele_freq_poly]{allele_freq_poly()}}

@@ -55,6 +55,8 @@
 #' print(genotypes)
 #' attr(genotypes, "counted_allele")
 #'
+#' unlink(ped_path)
+#'
 #' @author Josue Chinchilla-Vargas
 #'
 #' @seealso [vcf_to_dosage()], [find_parentage()], [allele_freq_poly()]

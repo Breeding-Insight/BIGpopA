@@ -114,6 +114,8 @@ if (requireNamespace("vcfR", quietly = TRUE)) {
 
   # same data as an individuals x markers matrix for allele_freq_poly()
   geno_mat <- vcf_to_dosage(vcf_path, ploidy = 4, format = "matrix")
+
+  unlink(vcf_path)
 }
 }
 
