@@ -1,8 +1,8 @@
 #' Validate Pedigree Trios Using Mendelian Error Analysis
 #'
 #' Validates parent-offspring trios against SNP genotype data using Mendelian
-#' error rates. Identifies incorrect parentage assignments, suggests
-#' best-matching replacements, and outputs a corrected pedigree. Founder trios
+#' error rates. Identifies incorrect parentage assignments and outputs a
+#' corrected pedigree. Founder trios
 #' (both parents coded as 0) are preserved unchanged if a founders file is
 #' supplied. Trios absent from the genotype file are retained as
 #' no_genotype_data.
@@ -47,6 +47,11 @@
 #'   \item{missing_parents}{Trios with one or both parents coded as 0 (non-founders).}
 #'   \item{full_results}{Complete data.table with all trios and all output columns.}
 #'   \item{corrected_pedigree}{Pedigree table after applying recommended corrections.}
+#'   \item{marker_summary}{Per-marker Mendelian mismatch counts over every trio
+#'     with both parents known and genotyped: `marker`, `trios_tested`,
+#'     `trios_mismatch` and `mismatch_pct`, sorted worst first. Markers with a
+#'     much higher rate than the rest (e.g. paralogous or miscalled markers)
+#'     are candidates for removal before rerunning.}
 #'   \item{plot}{ggplot object if plot_results = TRUE, otherwise NULL.}
 #' }
 #'
@@ -120,6 +125,7 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
   ## silence R CMD check NOTEs
   id <- male_parent <- female_parent <- status <- trio_mendelian_error_pct <- NULL
   plot_status <- recommended_correction <- NULL
+  marker <- trios_tested <- trios_mismatch <- mismatch_pct <- NULL
 
   #### Input validation ####
   if (trio_error_threshold < 0 || trio_error_threshold > 100)
@@ -200,25 +206,10 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
   if (base::nrow(pedigree) == 0)
     stop("No valid trios remain after filtering for genotype availability.")
 
-  #### Find best matching parent via homozygous mismatch ####
-  find_best_parent <- function(prog_id, exclude_ids = base::character(0)) {
-    candidates <- base::setdiff(base::rownames(genos_hom_mat),
-                                c(prog_id, exclude_ids))
-    if (base::length(candidates) == 0)
-      return(base::list(id = NA_character_, error_pct = NA_real_))
-    prog_hom <- genos_hom_mat[prog_id, ]
-    errors <- base::sapply(candidates, function(cand_id) {
-      cand_hom    <- genos_hom_mat[cand_id, ]
-      comparisons <- base::sum(!base::is.na(cand_hom) & !base::is.na(prog_hom))
-      if (comparisons == 0) return(NA_real_)
-      (base::sum(cand_hom != prog_hom, na.rm = TRUE) / comparisons) * 100
-    })
-    if (base::all(base::is.na(errors)))
-      return(base::list(id = NA_character_, error_pct = NA_real_))
-    best_idx <- base::which.min(errors)
-    base::list(id = candidates[best_idx],
-               error_pct = base::round(errors[best_idx], 2))
-  }
+  #### Per-marker mismatch counters (filled in the trio loop) ####
+  marker_names      <- base::colnames(genos_mat)
+  marker_tested_n   <- base::numeric(base::length(marker_names))
+  marker_mismatch_n <- base::numeric(base::length(marker_names))
 
   #### Main trio evaluation loop ####
   results_list <- base::lapply(base::seq_len(base::nrow(pedigree)), function(i) {
@@ -231,10 +222,6 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
     markers_tested          <- 0L
     male_parent_error_pct   <- NA_real_
     female_parent_error_pct <- NA_real_
-    best_male_parent        <- NA_character_
-    best_male_parent_pct    <- NA_real_
-    best_female_parent      <- NA_character_
-    best_female_parent_pct  <- NA_real_
 
     if (male_parent_id == "0" && female_parent_id == "0" &&
         prog_id %in% founder_ids) {
@@ -244,37 +231,25 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
       if (male_parent_id == "0" && female_parent_id == "0") {
         status              <- "missing_both_parents"
         correction_decision <- "none"
-        best_m                 <- find_best_parent(prog_id, exclude_ids = character(0))
-        best_male_parent       <- best_m$id
-        best_male_parent_pct   <- best_m$error_pct
-        best_f                 <- find_best_parent(prog_id, exclude_ids = c(best_m$id))
-        best_female_parent     <- best_f$id
-        best_female_parent_pct <- best_f$error_pct
       } else if (male_parent_id == "0" && female_parent_id != "0") {
         status              <- "missing_male_parent"
         correction_decision <- "none"
-        best_m               <- find_best_parent(prog_id, exclude_ids = c(female_parent_id))
-        best_male_parent     <- best_m$id
-        best_male_parent_pct <- best_m$error_pct
       } else if (male_parent_id != "0" && female_parent_id == "0") {
         status              <- "missing_female_parent"
         correction_decision <- "none"
-        best_f                 <- find_best_parent(prog_id, exclude_ids = c(male_parent_id))
-        best_female_parent     <- best_f$id
-        best_female_parent_pct <- best_f$error_pct
       } else {
         progeny_vec       <- genos_mat[prog_id, ]
         male_parent_vec   <- genos_mat[male_parent_id, ]
         female_parent_vec <- genos_mat[female_parent_id, ]
-        mismatches <- base::sum(
-          .mend_mismatch(male_parent_vec, female_parent_vec,
-                         progeny_vec, ploidy),
-          na.rm = TRUE
-        )
-        markers_tested <- base::sum(
-          .mend_testable(male_parent_vec, female_parent_vec,
-                         progeny_vec, ploidy)
-        )
+        mm_vec <- .mend_mismatch(male_parent_vec, female_parent_vec,
+                                 progeny_vec, ploidy)
+        tt_vec <- .mend_testable(male_parent_vec, female_parent_vec,
+                                 progeny_vec, ploidy)
+        mismatches     <- base::sum(mm_vec, na.rm = TRUE)
+        markers_tested <- base::sum(tt_vec)
+        marker_tested_n   <<- marker_tested_n   + base::as.numeric(tt_vec)
+        marker_mismatch_n <<- marker_mismatch_n +
+          base::as.numeric((mm_vec %in% TRUE) & tt_vec)
         if (markers_tested == 0) {
           status              <- "no_data"
           correction_decision <- "none"
@@ -314,22 +289,10 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
               correction_decision <- if (error_pct > trio_error_threshold) "unresolved" else "keep_both"
             } else if (male_acceptable && !female_acceptable) {
               correction_decision    <- "remove_female_parent"
-              best_f                 <- find_best_parent(prog_id, exclude_ids = c(male_parent_id))
-              best_female_parent     <- best_f$id
-              best_female_parent_pct <- best_f$error_pct
             } else if (!male_acceptable && female_acceptable) {
               correction_decision  <- "remove_male_parent"
-              best_m               <- find_best_parent(prog_id, exclude_ids = c(female_parent_id))
-              best_male_parent     <- best_m$id
-              best_male_parent_pct <- best_m$error_pct
             } else {
               correction_decision    <- "remove_both"
-              best_m                 <- find_best_parent(prog_id, exclude_ids = character(0))
-              best_male_parent       <- best_m$id
-              best_male_parent_pct   <- best_m$error_pct
-              best_f                 <- find_best_parent(prog_id, exclude_ids = c(best_m$id))
-              best_female_parent     <- best_f$id
-              best_female_parent_pct <- best_f$error_pct
             }
             if (status == "low_markers")
               correction_decision <- paste0("low_markers_", correction_decision)
@@ -347,11 +310,7 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
       status                          = status,
       recommended_correction          = correction_decision,
       male_parent_hom_error_pct       = male_parent_error_pct,
-      female_parent_hom_error_pct     = female_parent_error_pct,
-      best_male_candidate             = best_male_parent,
-      best_male_candidate_error_pct   = best_male_parent_pct,
-      best_female_candidate           = best_female_parent,
-      best_female_candidate_error_pct = best_female_parent_pct
+      female_parent_hom_error_pct     = female_parent_error_pct
     )
   })
 
@@ -368,11 +327,7 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
       status                          = "no_genotype_data",
       recommended_correction          = "none",
       male_parent_hom_error_pct       = NA_real_,
-      female_parent_hom_error_pct     = NA_real_,
-      best_male_candidate             = NA_character_,
-      best_male_candidate_error_pct   = NA_real_,
-      best_female_candidate           = NA_character_,
-      best_female_candidate_error_pct = NA_real_
+      female_parent_hom_error_pct     = NA_real_
     )
     final_df <- data.table::rbindlist(list(final_df, no_geno_df))
   }
@@ -487,6 +442,16 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
     }
   }
 
+  #### Per-marker mismatch summary ####
+  marker_summary <- data.table::data.table(
+    marker         = marker_names,
+    trios_tested   = base::as.integer(marker_tested_n),
+    trios_mismatch = base::as.integer(marker_mismatch_n)
+  )
+  marker_summary[, mismatch_pct := base::ifelse(
+    trios_tested > 0, base::round(trios_mismatch / trios_tested * 100, 2), NA_real_)]
+  marker_summary <- marker_summary[base::order(-mismatch_pct, -trios_mismatch, marker)]
+
   #### Compile and return named list ####
   output_list <- base::list(
     pass               = final_df[status == "pass"],
@@ -499,6 +464,7 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
                                                 "missing_female_parent")],
     full_results       = final_df,
     corrected_pedigree = corrected_pedigree,
+    marker_summary     = marker_summary,
     plot               = p
   )
   return(base::invisible(output_list))

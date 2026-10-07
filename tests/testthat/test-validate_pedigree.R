@@ -181,9 +181,7 @@ test_that("full_results has all expected lowercase columns", {
     "id", "orig_male_parent", "orig_female_parent",
     "trio_mendelian_error_pct", "trio_markers_tested", "status",
     "recommended_correction",
-    "male_parent_hom_error_pct", "female_parent_hom_error_pct",
-    "best_male_candidate",   "best_male_candidate_error_pct",
-    "best_female_candidate", "best_female_candidate_error_pct"
+    "male_parent_hom_error_pct", "female_parent_hom_error_pct"
   )
   expect_true(all(expected_cols %in% names(out$full_results)))
 })
@@ -366,8 +364,6 @@ test_that("missing_male_parent status and recommendation are correct", {
   r   <- out$full_results[id == "IND_E"]
   expect_equal(r$status,                 "missing_male_parent")
   expect_equal(r$recommended_correction, "none")
-  expect_false(is.na(r$best_male_candidate))
-  expect_true(is.na(r$best_female_candidate))
 })
 
 test_that("missing_female_parent status and recommendation are correct", {
@@ -379,8 +375,6 @@ test_that("missing_female_parent status and recommendation are correct", {
   r   <- out$full_results[id == "IND_E"]
   expect_equal(r$status,                 "missing_female_parent")
   expect_equal(r$recommended_correction, "none")
-  expect_true(is.na(r$best_male_candidate))
-  expect_false(is.na(r$best_female_candidate))
 })
 
 test_that("missing_both_parents status and recommendations are correct", {
@@ -392,28 +386,6 @@ test_that("missing_both_parents status and recommendations are correct", {
   r   <- out$full_results[id == "IND_E"]
   expect_equal(r$status,                 "missing_both_parents")
   expect_equal(r$recommended_correction, "none")
-  expect_false(is.na(r$best_male_candidate))
-  expect_false(is.na(r$best_female_candidate))
-})
-
-test_that("best_male_candidate for missing_male_parent excludes the known female parent", {
-  ped <- rbind(make_pedigree(),
-               data.table(id = "IND_E", male_parent = "0",
-                          female_parent = "IND_B"))
-  f   <- write_temp_files(ped = ped)
-  out <- validate_pedigree(f$ped, f$genos, verbose = FALSE, plot_results = FALSE)
-  r   <- out$full_results[id == "IND_E"]
-  expect_false(r$best_male_candidate == "IND_B")
-})
-
-test_that("best_female_candidate for missing_female_parent excludes the known male parent", {
-  ped <- rbind(make_pedigree(),
-               data.table(id = "IND_E", male_parent = "IND_A",
-                          female_parent = "0"))
-  f   <- write_temp_files(ped = ped)
-  out <- validate_pedigree(f$ped, f$genos, verbose = FALSE, plot_results = FALSE)
-  r   <- out$full_results[id == "IND_E"]
-  expect_false(r$best_female_candidate == "IND_A")
 })
 
 test_that("missing_parents list element contains only missing_* rows", {
@@ -443,8 +415,6 @@ test_that("founders status is assigned when ID is in founders list with 0 0 pare
   r   <- out$full_results[id == "IND_A"]
   expect_equal(r$status,                 "founders")
   expect_equal(r$recommended_correction, "none")
-  expect_true(is.na(r$best_male_candidate))
-  expect_true(is.na(r$best_female_candidate))
 })
 
 test_that("founders list element contains only founders rows", {
@@ -524,8 +494,6 @@ test_that("no_genotype_data rows have NA/0 for all analysis columns", {
   r   <- out$full_results[id == "GHOST"]
   expect_true(is.na(r$trio_mendelian_error_pct))
   expect_equal(r$trio_markers_tested, 0L)
-  expect_true(is.na(r$best_male_candidate))
-  expect_true(is.na(r$best_female_candidate))
 })
 
 test_that("no_genotype_data flagged when a declared parent is absent from genotype file", {

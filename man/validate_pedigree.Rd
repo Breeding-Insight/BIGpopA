@@ -66,13 +66,18 @@ An invisible named list with the following elements:
 \item{missing_parents}{Trios with one or both parents coded as 0 (non-founders).}
 \item{full_results}{Complete data.table with all trios and all output columns.}
 \item{corrected_pedigree}{Pedigree table after applying recommended corrections.}
+\item{marker_summary}{Per-marker Mendelian mismatch counts over every trio
+with both parents known and genotyped: \code{marker}, \code{trios_tested},
+\code{trios_mismatch} and \code{mismatch_pct}, sorted worst first. Markers with a
+much higher rate than the rest (e.g. paralogous or miscalled markers)
+are candidates for removal before rerunning.}
 \item{plot}{ggplot object if plot_results = TRUE, otherwise NULL.}
 }
 }
 \description{
 Validates parent-offspring trios against SNP genotype data using Mendelian
-error rates. Identifies incorrect parentage assignments, suggests
-best-matching replacements, and outputs a corrected pedigree. Founder trios
+error rates. Identifies incorrect parentage assignments and outputs a
+corrected pedigree. Founder trios
 (both parents coded as 0) are preserved unchanged if a founders file is
 supplied. Trios absent from the genotype file are retained as
 no_genotype_data.

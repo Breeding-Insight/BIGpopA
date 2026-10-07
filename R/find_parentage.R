@@ -14,9 +14,12 @@
 #'   data.table with an 'id' column and an optional 'sex' column
 #'   ('M', 'F', or 'A'). If absent, all parents are treated as ambiguous.
 #' @param progeny_file Path to a TSV/CSV/TXT file, OR a data.frame /
-#'   data.table with an 'id' column.
+#'   data.table with an 'id' column. For `method = "fill_pedigree"` it must
+#'   be a pedigree with `id`, `male_parent` and `female_parent` columns (e.g.
+#'   the `corrected_pedigree` from [validate_pedigree()]); see Details.
 #' @param method Character. One of "best_male_parent", "best_female_parent",
-#'   "best_match", or "best_pair" (default).
+#'   "best_match", "best_pair" (default), or "fill_pedigree" (requires a
+#'   pedigree as `progeny_file`; see Details).
 #' @param min_markers Integer. Minimum markers required; fewer flags
 #'   low_markers (default: 10).
 #' @param error_threshold Numeric. Maximum mismatch percentage; exceeded values
@@ -39,13 +42,46 @@
 #'   Odd ploidy (e.g. triploid), where balanced gametes are undefined, falls
 #'   back to a model-free opposite-homozygote exclusion evaluated on
 #'   homozygous-informative markers only (reduced power). Default is 2.
+#' @param founders_file Character, optional. Path to a one-column file of
+#'   founder IDs. Only used when `progeny_file` is a pedigree: founders with
+#'   both parents unknown are skipped instead of searched. Default is NULL.
+#' @param top_n Integer >= 1. Number of best candidates to report per progeny.
+#'   With the default of 1, only the best assignment is reported (plus tied
+#'   best pairs when `show_ties = TRUE` and `method = "best_pair"`). With
+#'   `top_n > 1`, candidates are ranked by error (ties broken by the number of
+#'   markers tested) and the best `top_n` are reported: rank 1 in the base
+#'   columns and ranks 2 to `top_n` in suffix columns (`male_parent_2`,
+#'   `female_parent_2`, `mendelian_error_pct_2`, `markers_tested_2` for
+#'   "best_pair"; `best_match_2`, `mendelian_error_pct_2`, `markers_tested_2`
+#'   for the other methods). Ties are then ranked like any other candidate, so
+#'   `show_ties` has no effect. Progeny with fewer than `top_n` candidates
+#'   have `NA` in the remaining ranks. Status refers to rank 1 only.
+#'
+#' @details **Method "fill_pedigree" ("fill in the blanks").** The
+#'   `progeny_file` must have `male_parent` and `female_parent` columns. A parent coded `0`, `NA` or
+#'   empty is treated as unknown and each row is handled on its own:
+#'   a known male searches only females, a known female searches only males,
+#'   and a row with both unknown gets the full pair search (unless listed in
+#'   `founders_file`). Rows with both parents known are skipped. The search is
+#'   the "best_pair" Mendelian trio test with the known parent held
+#'   fixed, and candidates come from `parents_file` (sex M/F/A as before); the
+#'   known parent only needs genotypes. Two columns are added to the results:
+#'   `search_mode` ("pair", "known_male" or "known_female") and
+#'   `known_parent_error_pct` (homozygous mismatch between the known parent and
+#'   the progeny; a high value suggests the known parent is wrong). A known
+#'   parent absent from the genotype file gives
+#'   `status = "known_parent_no_genotype"`. Without `method = "fill_pedigree"`,
+#'   any `male_parent` / `female_parent` columns in `progeny_file` are ignored.
 #'
 #' @return A named list (returned invisibly) with elements:
 #' \describe{
 #'   \item{pass}{Progeny with a confident parentage assignment.}
 #'   \item{high_error}{Progeny whose best assignment exceeds the error threshold.}
 #'   \item{low_markers}{Progeny with insufficient markers for a valid assignment.}
-#'   \item{full_results}{Complete data.table with all progeny and all output columns.}
+#'   \item{full_results}{Complete data.table with all progeny and all output columns.
+#'     `tied_candidates` gives the number of candidates (pairs for "best_pair")
+#'     that share the lowest error for each progeny; values above 1 mean the
+#'     best assignment is ambiguous.}
 #'   \item{plot}{ggplot object if plot_results = TRUE, otherwise NULL.}
 #' }
 #'
@@ -101,7 +137,9 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
                            exclude_self_match    = TRUE,
                            verbose               = TRUE,
                            plot_results          = TRUE,
-                           ploidy                = 2) {
+                           ploidy                = 2,
+                           top_n                 = 1,
+                           founders_file         = NULL) {
   
   ## silence R CMD check NOTEs
   id <- sex <- male_parent <- female_parent <- NULL
@@ -109,7 +147,7 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
   
   #### Input Validation ####
   allowed_methods <- c("best_male_parent", "best_female_parent",
-                       "best_match", "best_pair")
+                       "best_match", "best_pair", "fill_pedigree")
   if (!method %in% allowed_methods)
     stop("Method must be one of: ", paste(allowed_methods, collapse = ", "))
   if (min_markers < 1)
@@ -117,6 +155,10 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
   if (error_threshold < 0 || error_threshold > 100)
     stop("error_threshold must be between 0 and 100.")
   .check_ploidy(ploidy)
+  if (!is.numeric(top_n) || length(top_n) != 1 || is.na(top_n) ||
+      top_n < 1 || top_n != base::round(top_n))
+    stop("top_n must be a single positive integer.")
+  top_n <- base::as.integer(top_n)
 
   # Accept file path OR in-memory data.frame / data.table
   read_flex <- function(x, label, ...) {
@@ -143,7 +185,35 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
   
   # Column names are matched ignoring case (e.g. ID, Sex)
   all_parents        <- .standardize_names(all_parents,        c("id", "sex"))
-  progeny_candidates <- .standardize_names(progeny_candidates, "id")
+  progeny_candidates <- .standardize_names(progeny_candidates,
+                                           c("id", "male_parent", "female_parent"))
+
+  #### Pedigree ("fill in the blanks") mode ####
+  is_unknown <- function(x) base::is.na(x) | base::trimws(base::as.character(x)) %in% c("", "0", "NA")
+  method_reported <- method
+  pedigree_mode   <- method == "fill_pedigree"
+  if (pedigree_mode) {
+    if (!base::all(c("male_parent", "female_parent") %in% base::names(progeny_candidates)))
+      stop("method = 'fill_pedigree' requires a progeny_file with id, male_parent ",
+           "and female_parent columns.")
+    method <- "best_pair"
+    progeny_candidates[, male_parent   := base::as.character(male_parent)]
+    progeny_candidates[, female_parent := base::as.character(female_parent)]
+    founder_ids <- if (!is.null(founders_file))
+      base::unique(data.table::fread(founders_file, header = FALSE,
+                                     colClasses = "character")[[1]]) else
+                                       base::character(0)
+    um         <- is_unknown(progeny_candidates$male_parent)
+    uf         <- is_unknown(progeny_candidates$female_parent)
+    is_founder <- um & uf & progeny_candidates$id %in% founder_ids
+    if (verbose)
+      base::cat("Pedigree mode:", base::sum(!um & !uf), "complete trios skipped,",
+                base::sum(is_founder), "founders skipped,",
+                base::sum((um | uf) & !is_founder), "rows with a missing parent to search.\n")
+    progeny_candidates <- progeny_candidates[(um | uf) & !is_founder]
+    if (base::nrow(progeny_candidates) == 0)
+      stop("No progeny with a missing parent to fill in.")
+  }
 
   valid_ids       <- genos$id
   removed_parents <- base::setdiff(all_parents$id, valid_ids)
@@ -211,8 +281,10 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
       best_match          = NA_character_,
       mendelian_error_pct = NA_real_,
       markers_tested      = NA_integer_,
-      status              = NA_character_
+      status              = NA_character_,
+      tied_candidates     = NA_integer_
     )
+    extra_list <- base::vector("list", n_progeny)
     
     for (i in base::seq_len(n_progeny)) {
       prog_id     <- base::rownames(progeny_genos)[i]
@@ -231,7 +303,15 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
         percent_mismatch[self_idx] <- NA_real_
       }
       
-      best_idx <- base::which.min(percent_mismatch)
+      if (top_n > 1) {
+        valid_idx  <- base::which(!base::is.na(percent_mismatch))
+        ranked_idx <- valid_idx[base::order(percent_mismatch[valid_idx],
+                                            -comparisons[valid_idx])]
+        top_idx    <- ranked_idx[base::seq_len(base::min(top_n, base::length(ranked_idx)))]
+        best_idx   <- top_idx[base::seq_len(base::min(1L, base::length(top_idx)))]
+      } else {
+        best_idx <- base::which.min(percent_mismatch)
+      }
       if (base::length(best_idx) == 0) {
         data.table::set(results_dt, i, "markers_tested", 0L)
         data.table::set(results_dt, i, "status",         "low_markers")
@@ -244,6 +324,35 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
       data.table::set(results_dt, i, "mendelian_error_pct", best_error)
       data.table::set(results_dt, i, "markers_tested",      base::as.integer(best_markers))
       data.table::set(results_dt, i, "status",              assign_status(best_markers, best_error))
+      data.table::set(results_dt, i, "tied_candidates",
+                      base::as.integer(base::sum(percent_mismatch == percent_mismatch[best_idx],
+                                                 na.rm = TRUE)))
+      
+      if (top_n > 1 && base::length(top_idx) > 1) {
+        rank_row <- base::list(id = prog_id)
+        for (k in base::seq(2, base::length(top_idx))) {
+          rank_row[[base::paste0("best_match_",           k)]] <- base::rownames(parent_genos)[top_idx[k]]
+          rank_row[[base::paste0("mendelian_error_pct_",  k)]] <- base::round(percent_mismatch[top_idx[k]], 2)
+          rank_row[[base::paste0("markers_tested_",       k)]] <- base::as.integer(comparisons[top_idx[k]])
+        }
+        extra_list[[i]] <- data.table::as.data.table(rank_row)
+      }
+    }
+    
+    # Add ranks 2..top_n as suffix columns, keeping the progeny order
+    extra_dt <- data.table::rbindlist(base::Filter(Negate(base::is.null), extra_list),
+                                      fill = TRUE, use.names = TRUE)
+    if (top_n > 1) {
+      for (k in base::seq(2, top_n)) {
+        cols <- base::paste0(c("best_match_", "mendelian_error_pct_", "markers_tested_"), k)
+        for (col in cols) {
+          vals <- if (base::nrow(extra_dt) > 0 && col %in% base::names(extra_dt))
+            extra_dt[[col]][base::match(results_dt$id, extra_dt$id)] else
+              base::rep(if (grepl("^best_match", col)) NA_character_ else
+                if (grepl("^markers", col)) NA_integer_ else NA_real_, base::nrow(results_dt))
+          data.table::set(results_dt, j = col, value = vals)
+        }
+      }
     }
     final_df <- results_dt
   }
@@ -261,7 +370,20 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
     male_parent_genos_mat   <- genos_mat[parent_pairs$male_parent,   , drop = FALSE]
     female_parent_genos_mat <- genos_mat[parent_pairs$female_parent, , drop = FALSE]
     progeny_ids <- progeny_candidates$id
-    progeny_mat <- genos_mat[progeny_ids, , drop = FALSE]
+    n_all       <- base::length(progeny_ids)
+    if (pedigree_mode) {
+      kmale <- base::ifelse(is_unknown(progeny_candidates$male_parent),
+                            NA_character_, progeny_candidates$male_parent)
+      kfem  <- base::ifelse(is_unknown(progeny_candidates$female_parent),
+                            NA_character_, progeny_candidates$female_parent)
+    } else {
+      kmale <- kfem <- base::rep(NA_character_, n_all)
+    }
+    search_mode <- base::ifelse(!base::is.na(kmale), "known_male",
+                                base::ifelse(!base::is.na(kfem), "known_female", "pair"))
+    pair_idx    <- base::which(search_mode == "pair")
+    # Full pair matrices are only built for progeny with no known parent
+    progeny_mat <- genos_mat[progeny_ids[pair_idx], , drop = FALSE]
     n_progeny   <- base::nrow(progeny_mat)
     n_pairs     <- base::nrow(parent_pairs)
     
@@ -305,18 +427,80 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
       female_parent       = NA_character_,
       mendelian_error_pct = NA_character_,
       markers_tested      = NA_integer_,
-      status              = NA_character_
+      status              = NA_character_,
+      tied_candidates     = NA_integer_
     )
     
-    results_list <- base::vector("list", n_progeny)
-    for (j in base::seq_len(n_progeny)) {
-      prog_id          <- progeny_ids[j]
-      percent_mismatch <- pct_mismatch_mat[, j]
-      comparisons      <- comparison_mat[,  j]
+    # Known-parent bookkeeping (pedigree mode only)
+    known_id_vec <- base::ifelse(search_mode == "known_male", kmale,
+                                 base::ifelse(search_mode == "known_female", kfem,
+                                              NA_character_))
+    if (pedigree_mode) {
+      known_err <- base::rep(NA_real_, n_all)
+      for (j in base::which(search_mode != "pair")) {
+        kid <- known_id_vec[j]
+        if (kid %in% base::rownames(genos_hom_mat)) {
+          kh <- genos_hom_mat[kid, ]
+          ph <- genos_hom_mat[progeny_ids[j], ]
+          n_cmp <- base::sum(!base::is.na(kh) & !base::is.na(ph))
+          known_err[j] <- if (n_cmp == 0) NA_real_ else
+            base::round(base::sum(kh != ph, na.rm = TRUE) / n_cmp * 100, 2)
+        }
+      }
+      data.table::set(results_dt, j = "search_mode",            value = search_mode)
+      data.table::set(results_dt, j = "known_parent_error_pct", value = known_err)
+      data.table::set(results_dt, which(search_mode == "known_male"),
+                      "male_parent",   known_id_vec[search_mode == "known_male"])
+      data.table::set(results_dt, which(search_mode == "known_female"),
+                      "female_parent", known_id_vec[search_mode == "known_female"])
+    }
+    
+    results_list <- base::vector("list", n_all)
+    for (j in base::seq_len(n_all)) {
+      prog_id <- progeny_ids[j]
+      mode_j  <- search_mode[j]
+      
+      if (mode_j == "pair") {
+        pairs_j          <- parent_pairs
+        pj               <- base::match(j, pair_idx)
+        percent_mismatch <- pct_mismatch_mat[, pj]
+        comparisons      <- comparison_mat[,  pj]
+      } else {
+        known_id <- known_id_vec[j]
+        if (!known_id %in% base::rownames(genos_mat)) {
+          warning("Known parent '", known_id, "' of progeny '", prog_id,
+                  "' is not in the genotype file; this progeny cannot be tested.",
+                  call. = FALSE)
+          data.table::set(results_dt, j, "markers_tested", 0L)
+          data.table::set(results_dt, j, "status",         "known_parent_no_genotype")
+          next
+        }
+        cand <- if (mode_j == "known_male") female_parent_candidates$id else
+          male_parent_candidates$id
+        if (!allow_parent_selfing) cand <- cand[cand != known_id]
+        if (exclude_self_match)    cand <- cand[cand != prog_id]
+        cand <- cand[cand %in% base::rownames(genos_mat)]
+        if (base::length(cand) == 0) {
+          data.table::set(results_dt, j, "markers_tested", 0L)
+          data.table::set(results_dt, j, "status",         "low_markers")
+          next
+        }
+        pairs_j <- if (mode_j == "known_male")
+          data.table::data.table(male_parent = known_id, female_parent = cand) else
+            data.table::data.table(male_parent = cand,   female_parent = known_id)
+        pm <- genos_mat[pairs_j$male_parent,   , drop = FALSE]
+        pf <- genos_mat[pairs_j$female_parent, , drop = FALSE]
+        pg <- base::matrix(genos_mat[prog_id, ], nrow = base::nrow(pairs_j),
+                           ncol = base::ncol(genos_mat), byrow = TRUE)
+        mm          <- base::rowSums(.mend_mismatch(pm, pf, pg, ploidy), na.rm = TRUE)
+        comparisons <- base::rowSums(.mend_testable(pm, pf, pg, ploidy))
+        percent_mismatch <- (mm / comparisons) * 100
+        percent_mismatch[base::is.nan(percent_mismatch)] <- NA
+      }
       
       if (exclude_self_match) {
-        self_pair_idx <- parent_pairs$male_parent == prog_id |
-          parent_pairs$female_parent == prog_id
+        self_pair_idx <- pairs_j$male_parent == prog_id |
+          pairs_j$female_parent == prog_id
         percent_mismatch[self_pair_idx] <- NA_real_
       }
       
@@ -328,39 +512,52 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
         next
       }
       
-      best_indices <- base::which(percent_mismatch == min_mismatch_val)
-      if (base::length(best_indices) > 1) {
-        best_markers_per_pair <- comparisons[best_indices]
-        max_markers           <- base::max(best_markers_per_pair)
-        best_indices          <- best_indices[best_markers_per_pair == max_markers]
+      if (top_n > 1) {
+        # Rank all candidate pairs by error, then by markers tested; keep top_n
+        valid_idx    <- base::which(!base::is.na(percent_mismatch))
+        ranked_idx   <- valid_idx[base::order(percent_mismatch[valid_idx],
+                                              -comparisons[valid_idx])]
+        best_indices <- ranked_idx[base::seq_len(base::min(top_n, base::length(ranked_idx)))]
+      } else {
+        best_indices <- base::which(percent_mismatch == min_mismatch_val)
+        if (base::length(best_indices) > 1) {
+          best_markers_per_pair <- comparisons[best_indices]
+          max_markers           <- base::max(best_markers_per_pair)
+          best_indices          <- best_indices[best_markers_per_pair == max_markers]
+        }
       }
       
-      best_pairs   <- parent_pairs[best_indices]
+      best_pairs   <- pairs_j[best_indices]
       best_markers <- comparisons[best_indices[1]]
       best_error   <- base::round(min_mismatch_val, 2)
       a_status     <- assign_status(best_markers, best_error)
       
-      if (!show_ties && base::nrow(best_pairs) > 1) {
+      if (top_n == 1 && !show_ties && base::nrow(best_pairs) > 1) {
         warning("Progeny '", prog_id, "' has ", base::nrow(best_pairs),
                 " tied best pairs. Only one is reported as show_ties=FALSE.",
                 call. = FALSE)
       }
       
+      report_all    <- show_ties || top_n > 1
       num_to_report <- base::min(base::nrow(best_pairs),
-                                 if (show_ties) base::nrow(best_pairs) else 1)
+                                 if (report_all) base::nrow(best_pairs) else 1)
       
       data.table::set(results_dt, j, "male_parent",         best_pairs$male_parent[1])
       data.table::set(results_dt, j, "female_parent",       best_pairs$female_parent[1])
       data.table::set(results_dt, j, "mendelian_error_pct", base::sprintf("%.2f", min_mismatch_val))
       data.table::set(results_dt, j, "markers_tested",      base::as.integer(best_markers))
       data.table::set(results_dt, j, "status",              a_status)
+      data.table::set(results_dt, j, "tied_candidates",
+                      base::as.integer(base::sum(percent_mismatch == min_mismatch_val,
+                                                 na.rm = TRUE)))
       
-      if (show_ties && num_to_report > 1) {
+      if (report_all && num_to_report > 1) {
         tie_row <- base::list(id = prog_id)
         for (k in base::seq(2, num_to_report)) {
           tie_row[[base::paste0("male_parent_",         k)]] <- best_pairs$male_parent[k]
           tie_row[[base::paste0("female_parent_",       k)]] <- best_pairs$female_parent[k]
-          tie_row[[base::paste0("mendelian_error_pct_", k)]] <- min_mismatch_val
+          tie_row[[base::paste0("mendelian_error_pct_", k)]] <-
+            if (top_n > 1) base::round(percent_mismatch[best_indices[k]], 2) else min_mismatch_val
           tie_row[[base::paste0("markers_tested_",      k)]] <- comparisons[best_indices[k]]
         }
         results_list[[j]] <- data.table::as.data.table(tie_row)
@@ -395,7 +592,7 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
     total_progeny <- base::nrow(final_df)
     base::cat("\n=== Parentage Assignment Report ===\n")
     base::cat("\nTotal progeny evaluated:", total_progeny, "\n")
-    base::cat("Method:", method, "  |  ",
+    base::cat("Method:", method_reported, "  |  ",
               "Error threshold:", error_threshold, "%  |  ",
               "Minimum markers:", min_markers, "\n")
     
