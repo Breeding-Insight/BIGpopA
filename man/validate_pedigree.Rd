@@ -13,7 +13,8 @@ validate_pedigree(
   single_parent_error_threshold = 2,
   verbose = TRUE,
   plot_results = TRUE,
-  ploidy = 2
+  ploidy = 2,
+  marker_trio_table = FALSE
 )
 }
 \arguments{
@@ -54,6 +55,10 @@ test (assumes autopolyploid inheritance; conservative for allopolyploids).
 Odd ploidy (e.g. triploid), where balanced gametes are undefined, falls
 back to a model-free opposite-homozygote exclusion evaluated on
 homozygous-informative markers only (reduced power). Default is 2.}
+
+\item{marker_trio_table}{Logical. If TRUE, the returned list includes
+\code{marker_trio_table}, a marker-by-trio table of per-marker statuses (see
+Details). Default is FALSE.}
 }
 \value{
 An invisible named list with the following elements:
@@ -71,6 +76,10 @@ with both parents known and genotyped: \code{marker}, \code{trios_tested},
 \code{trios_mismatch} and \code{mismatch_pct}, sorted worst first. Markers with a
 much higher rate than the rest (e.g. paralogous or miscalled markers)
 are candidates for removal before rerunning.}
+\item{marker_trio_table}{If \code{marker_trio_table = TRUE}, a data.table with
+one row per marker (\code{marker}) and one column per trio with both parents
+known and genotyped, named \code{id_male_parent_female_parent}; otherwise NULL.
+See Details for the status values.}
 \item{plot}{ggplot object if plot_results = TRUE, otherwise NULL.}
 }
 }
@@ -83,6 +92,16 @@ supplied. Trios absent from the genotype file are retained as
 no_genotype_data.
 }
 \details{
+The cells of \code{marker_trio_table} take one of these values: \code{match};
+\code{mismatch_male} or \code{mismatch_female} (the offspring is impossible with that
+parent alone, whatever the other parent contributes); \code{mismatch_both} (the
+offspring is impossible with either parent alone); \code{mismatch_combination}
+(each parent is compatible alone but the pair is not, for example a 0 x 0
+cross with a heterozygous offspring); \code{untestable} (odd ploidy, marker not
+informative); \verb{missing_*} (no call, named after every individual without a
+call: \code{missing_progeny}, \code{missing_male}, \code{missing_female}, \code{missing_male_female},
+\code{missing_progeny_male}, \code{missing_progeny_female} or \code{missing_progeny_male_female}).
+
 The \code{recommended_correction} column of \code{full_results} takes these
 values:
 \describe{

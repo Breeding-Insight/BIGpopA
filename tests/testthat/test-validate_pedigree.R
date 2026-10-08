@@ -151,7 +151,7 @@ test_that("returns an invisible named list with all required elements", {
   expect_type(out, "list")
   expect_named(out, c("pass", "fail", "low_markers", "no_genotype_data",
                       "founders", "missing_parents", "full_results",
-                      "corrected_pedigree", "plot"),
+                      "corrected_pedigree", "marker_summary", "marker_trio_table", "plot"),
                ignore.order = TRUE)
 })
 
@@ -605,7 +605,7 @@ test_that("verbose = TRUE returns valid named list without error", {
   expect_type(out, "list")
   expect_named(out, c("pass", "fail", "low_markers", "no_genotype_data",
                       "founders", "missing_parents", "full_results",
-                      "corrected_pedigree", "plot"),
+                      "corrected_pedigree", "marker_summary", "marker_trio_table", "plot"),
                ignore.order = TRUE)
 })
 
@@ -734,4 +734,32 @@ test_that("invalid input type raises an error for validate_pedigree", {
                       verbose = FALSE, plot_results = FALSE),
     regexp = "Error reading input files"
   )
+})
+
+# ==============================================================================
+# low_markers_* decisions remove only the identified parent
+# ==============================================================================
+test_that("corrected_pedigree: low_markers_remove_female_parent keeps the male parent", {
+  # IND_E (all 0) x IND_A (all 0) is fine for the male parent, but the female
+  # parent IND_B (all 2) is incompatible; only 4 markers -> low_markers
+  genos <- make_genos()[, 1:5]
+  ped   <- data.table(id = "IND_E", male_parent = "IND_A", female_parent = "IND_B")
+  out   <- validate_pedigree(ped, genos, min_markers = 10,
+                             verbose = FALSE, plot_results = FALSE)
+  r <- out$full_results[id == "IND_E"]
+  expect_equal(r$status, "low_markers")
+  expect_equal(r$recommended_correction, "low_markers_remove_female_parent")
+  expect_equal(out$corrected_pedigree[id == "IND_E"]$female_parent, "0")
+  expect_equal(out$corrected_pedigree[id == "IND_E"]$male_parent, "IND_A")
+})
+
+test_that("corrected_pedigree: low_markers_remove_male_parent keeps the female parent", {
+  genos <- make_genos()[, 1:5]
+  ped   <- data.table(id = "IND_E", male_parent = "IND_B", female_parent = "IND_A")
+  out   <- validate_pedigree(ped, genos, min_markers = 10,
+                             verbose = FALSE, plot_results = FALSE)
+  r <- out$full_results[id == "IND_E"]
+  expect_equal(r$recommended_correction, "low_markers_remove_male_parent")
+  expect_equal(out$corrected_pedigree[id == "IND_E"]$male_parent, "0")
+  expect_equal(out$corrected_pedigree[id == "IND_E"]$female_parent, "IND_A")
 })

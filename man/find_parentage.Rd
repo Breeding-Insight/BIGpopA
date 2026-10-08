@@ -72,10 +72,6 @@ Odd ploidy (e.g. triploid), where balanced gametes are undefined, falls
 back to a model-free opposite-homozygote exclusion evaluated on
 homozygous-informative markers only (reduced power). Default is 2.}
 
-\item{founders_file}{Character, optional. Path to a one-column file of
-founder IDs. Only used with \code{method = "fill_pedigree"}: founders with
-both parents unknown are skipped instead of searched. Default is NULL.}
-
 \item{top_n}{Integer >= 1. Number of best candidates to report per progeny.
 With the default of 1, only the best assignment is reported (plus tied
 best pairs when \code{show_ties = TRUE} and \code{method = "best_pair"}). With
@@ -87,23 +83,10 @@ columns and ranks 2 to \code{top_n} in suffix columns (\code{male_parent_2},
 for the other methods). Ties are then ranked like any other candidate, so
 \code{show_ties} has no effect. Progeny with fewer than \code{top_n} candidates
 have \code{NA} in the remaining ranks. Status refers to rank 1 only.}
-}
-\details{
-\strong{Method "fill_pedigree" ("fill in the blanks").} The
-\code{progeny_file} must have \code{male_parent} and \code{female_parent} columns. A parent
-coded \code{0}, \code{NA} or empty is treated as unknown and each row is handled on
-its own: a known male searches only females, a known female searches only
-males, and a row with both unknown gets the full pair search (unless listed
-in \code{founders_file}). Rows with both parents known are skipped. The search is
-the "best_pair" Mendelian trio test with the known parent held fixed, and
-candidates come from \code{parents_file} (sex M/F/A as before); the known parent
-only needs genotypes. Two columns are added to the results: \code{search_mode}
-("pair", "known_male" or "known_female") and \code{known_parent_error_pct}
-(homozygous mismatch between the known parent and the progeny; a high value
-suggests the known parent is wrong). A known parent absent from the genotype
-file gives \code{status = "known_parent_no_genotype"}. Without
-\code{method = "fill_pedigree"}, any \code{male_parent} / \code{female_parent} columns in
-\code{progeny_file} are ignored.
+
+\item{founders_file}{Character, optional. Path to a one-column file of
+founder IDs. Only used when \code{progeny_file} is a pedigree: founders with
+both parents unknown are skipped instead of searched. Default is NULL.}
 }
 \value{
 A named list (returned invisibly) with elements:
@@ -122,6 +105,23 @@ best assignment is ambiguous.}
 Assigns the most likely parent(s) to each progeny from SNP genotype data
 using Mendelian error rates or homozygous mismatch rates. Parents or progeny
 absent from the genotype file are removed with a warning.
+}
+\details{
+\strong{Method "fill_pedigree" ("fill in the blanks").} The
+\code{progeny_file} must have \code{male_parent} and \code{female_parent} columns. A parent coded \code{0}, \code{NA} or
+empty is treated as unknown and each row is handled on its own:
+a known male searches only females, a known female searches only males,
+and a row with both unknown gets the full pair search (unless listed in
+\code{founders_file}). Rows with both parents known are skipped. The search is
+the "best_pair" Mendelian trio test with the known parent held
+fixed, and candidates come from \code{parents_file} (sex M/F/A as before); the
+known parent only needs genotypes. Two columns are added to the results:
+\code{search_mode} ("pair", "known_male" or "known_female") and
+\code{known_parent_error_pct} (homozygous mismatch between the known parent and
+the progeny; a high value suggests the known parent is wrong). A known
+parent absent from the genotype file gives
+\code{status = "known_parent_no_genotype"}. Without \code{method = "fill_pedigree"},
+any \code{male_parent} / \code{female_parent} columns in \code{progeny_file} are ignored.
 }
 \examples{
 \donttest{

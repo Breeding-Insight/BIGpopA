@@ -45,6 +45,7 @@ library(BIGpopA)
 | `find_parentage()` | Assign the most likely parent(s) to progeny from candidate parents; `top_n` reports several candidates, `tied_candidates` flags ambiguity, and `method = "fill_pedigree"` fills missing parents of a pedigree |
 | `allele_freq_poly()` | Compute reference population allele frequencies |
 | `solve_composition_poly()` | Estimate genome-wide breed/line composition by quadratic programming |
+| `assign_composition_line()` | Percentages per line and predicted line, with an assignment threshold (default 50%) |
 | `vcf_to_dosage()` | Convert a VCF (`.vcf` / `.vcf.gz`) to allele dosages for any ploidy |
 | `ped_to_dosage()` | Convert a PLINK `.ped` (with optional `.map`) to allele dosages |
 

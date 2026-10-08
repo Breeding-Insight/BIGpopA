@@ -280,21 +280,14 @@ prediction
 
 It is important to note that while the model produces an R2 value, it is expected to be low since an allele dosage (discrete number) is being regressed on an allele frequency (continuous value).
 
-Assign each sample to the cultivar with the highest composition (ignoring the
-R2 fit column) and format the panel columns as percentages:
-
+`assign_composition_line()` turns the result into the table used by Familia:
+the estimated percentage of each panel column and a `Predicted line`. A sample
+is assigned to its highest-proportion line only if that proportion is at least
+`assign_threshold` (default 50); otherwise it is labelled `Undetermined`. Use
+`assign_threshold = 0` to always assign the highest line.
 
 ```{r}
-line_cols = setdiff(names(prediction), "R2")
-
-pred_results = prediction %>%
-  mutate(
-    ID             = rownames(prediction),
-    predicted_line = line_cols[max.col(as.matrix(prediction[line_cols]), ties.method = "first")],
-    across(all_of(line_cols), ~ scales::percent(., accuracy = 0.1))
-  ) %>%
-  select(ID, predicted_line, all_of(line_cols))
-
+pred_results = assign_composition_line(solve_composition_poly(validation, freq, ploidy = 4))
 pred_results
 ```
 
@@ -314,6 +307,7 @@ assigned  = find_parentage(genotypes, parents, progeny, method = "best_pair")$fu
 # breed/line composition
 freq       = allele_freq_poly(reference, ref_ids, ploidy = 4)
 prediction = solve_composition_poly(validation, freq, ploidy = 4)
+composition_table = assign_composition_line(prediction, assign_threshold = 50)
 ```
 
 # Session information
