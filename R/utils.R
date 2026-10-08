@@ -301,3 +301,51 @@ QPsolve <- function(Y, X) {
   return(result)
 }
 
+#' Per-marker status of one trio
+#'
+#' Classifies every marker of one parent-offspring trio as a match, a mismatch
+#' attributed to the male parent, the female parent or both, a mismatch that only
+#' appears for the pair of parents (\code{mismatch_combination}), a marker that
+#' cannot be tested (\code{untestable}, odd ploidy only) or a missing call (named after every individual without a call, for example \code{missing_male_female}). For
+#' even ploidy a parent is incompatible with the offspring when the offspring
+#' dose lies outside that parent's gamete range plus any contribution (0 to
+#' ploidy / 2 alleles) from the other parent. For odd ploidy a parent is
+#' incompatible when it is homozygous for the opposite allele of a homozygous
+#' offspring.
+#'
+#' @param male,female,offspring dosage vectors (0..ploidy), aligned by marker.
+#' @param ploidy integer ploidy level.
+#' @return Character vector with one status per marker.
+#' @noRd
+.marker_trio_status <- function(male, female, offspring, ploidy) {
+  mm <- .mend_mismatch(male, female, offspring, ploidy)
+  tt <- .mend_testable(male, female, offspring, ploidy)
+  if (ploidy %% 2 == 0) {
+    h          <- ploidy / 2
+    parent_bad <- function(g) {
+      !(offspring >= base::pmax(0, g - h) & offspring <= base::pmin(g, h) + h)
+    }
+    male_bad   <- parent_bad(male)
+    female_bad <- parent_bad(female)
+  } else {
+    o_hom      <- offspring == 0 | offspring == ploidy
+    male_bad   <- (male   == 0 | male   == ploidy) & male   != offspring & o_hom
+    female_bad <- (female == 0 | female == ploidy) & female != offspring & o_hom
+  }
+  # missing calls are named after every individual without a call, e.g.
+  # missing_male, missing_male_female, missing_progeny_female
+  na_p <- base::is.na(offspring); na_m <- base::is.na(male); na_f <- base::is.na(female)
+  missing_label <- base::paste0("missing",
+                                base::ifelse(na_p, "_progeny", ""),
+                                base::ifelse(na_m, "_male",    ""),
+                                base::ifelse(na_f, "_female",  ""))
+  dplyr::case_when(
+    na_p | na_m | na_f                        ~ missing_label,
+    !tt                                       ~ "untestable",
+    !mm                                       ~ "match",
+    male_bad & !female_bad                    ~ "mismatch_male",
+    female_bad & !male_bad                    ~ "mismatch_female",
+    male_bad & female_bad                     ~ "mismatch_both",
+    TRUE                                      ~ "mismatch_combination"
+  )
+}
