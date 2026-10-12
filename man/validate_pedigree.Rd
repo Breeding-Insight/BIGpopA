@@ -28,8 +28,8 @@ with \code{\link[=vcf_to_dosage]{vcf_to_dosage()}} using \code{ploidy}; a path t
 data.table with an id column followed by marker columns coded as
 allele-B dosage (0, 1, ..., ploidy).}
 
-\item{founders_file}{Character, optional. Path to a one-column file listing
-founder IDs. Founders with both parents coded as 0 are left unchanged.
+\item{founders_file}{Optional. Founder IDs as a path to a one-column file, a
+character vector of ids, or a data.frame (first column). Founders with both parents coded as 0 are left unchanged.
 Defaults to NULL.}
 
 \item{trio_error_threshold}{Numeric. Maximum Mendelian error percentage to
