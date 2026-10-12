@@ -280,8 +280,8 @@ pre code {
 
 /* Inline code styling */
 p code, li code, td code, span code {
-  background-color: var(--code-bg-dark) !important;
-  color: white !important;
+  background-color: #eef2f2 !important;
+  color: #1a1a1a !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
   font-family: 'Fira Code', 'Monaco', 'Consolas', monospace !important;
@@ -485,11 +485,20 @@ body::after {
     url('usda-logo-color.png'),
     url('IFAS.jpg'),
     url('cornell_seal_simple_web_b31b1b.png');
-  background-size: 150px 80px, 150px 80px, 100px 80px;
+  background-size: auto 55px, 150px 80px, 100px 80px;
   background-repeat: no-repeat, no-repeat, no-repeat;
   background-position:
     calc(100% - 530px) center,
     calc(100% - 360px) center,
     calc(100% - 240px) center;
   box-sizing: border-box;
+}
+
+/* Table borders for readability */
+.table, table.table {
+  border: 1px solid #b0b0b0;
+  border-collapse: collapse;
+}
+.table th, .table td, table.table th, table.table td {
+  border: 1px solid #b0b0b0 !important;
 }
