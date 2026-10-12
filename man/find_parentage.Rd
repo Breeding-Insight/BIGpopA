@@ -84,8 +84,8 @@ for the other methods). Ties are then ranked like any other candidate, so
 \code{show_ties} has no effect. Progeny with fewer than \code{top_n} candidates
 have \code{NA} in the remaining ranks. Status refers to rank 1 only.}
 
-\item{founders_file}{Character, optional. Path to a one-column file of
-founder IDs. Only used when \code{progeny_file} is a pedigree: founders with
+\item{founders_file}{Optional. Founder IDs as a path to a one-column file, a
+character vector of ids, or a data.frame (first column). Only used when \code{progeny_file} is a pedigree: founders with
 both parents unknown are skipped instead of searched. Default is NULL.}
 }
 \value{

@@ -42,8 +42,8 @@
 #'   Odd ploidy (e.g. triploid), where balanced gametes are undefined, falls
 #'   back to a model-free opposite-homozygote exclusion evaluated on
 #'   homozygous-informative markers only (reduced power). Default is 2.
-#' @param founders_file Character, optional. Path to a one-column file of
-#'   founder IDs. Only used when `progeny_file` is a pedigree: founders with
+#' @param founders_file Optional. Founder IDs as a path to a one-column file, a
+#'   character vector of ids, or a data.frame (first column). Only used when `progeny_file` is a pedigree: founders with
 #'   both parents unknown are skipped instead of searched. Default is NULL.
 #' @param top_n Integer >= 1. Number of best candidates to report per progeny.
 #'   With the default of 1, only the best assignment is reported (plus tied
@@ -199,10 +199,7 @@ find_parentage <- function(genotypes_file, parents_file, progeny_file,
     method <- "best_pair"
     progeny_candidates[, male_parent   := base::as.character(male_parent)]
     progeny_candidates[, female_parent := base::as.character(female_parent)]
-    founder_ids <- if (!is.null(founders_file))
-      base::unique(data.table::fread(founders_file, header = FALSE,
-                                     colClasses = "character")[[1]]) else
-                                       base::character(0)
+    founder_ids <- .read_founders(founders_file)
     um         <- is_unknown(progeny_candidates$male_parent)
     uf         <- is_unknown(progeny_candidates$female_parent)
     is_founder <- um & uf & progeny_candidates$id %in% founder_ids

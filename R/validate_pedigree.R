@@ -15,8 +15,8 @@
 #'   (diploid only), converted with [ped_to_dosage()]; or a data.frame /
 #'   data.table with an id column followed by marker columns coded as
 #'   allele-B dosage (0, 1, ..., ploidy).
-#' @param founders_file Character, optional. Path to a one-column file listing
-#'   founder IDs. Founders with both parents coded as 0 are left unchanged.
+#' @param founders_file Optional. Founder IDs as a path to a one-column file, a
+#'   character vector of ids, or a data.frame (first column). Founders with both parents coded as 0 are left unchanged.
 #'   Defaults to NULL.
 #' @param trio_error_threshold Numeric. Maximum Mendelian error percentage to
 #'   classify a trio as pass (default: 5.0). Must be between 0 and 100.
@@ -190,16 +190,7 @@ validate_pedigree <- function(pedigree_file, genotypes_file,
   original_pedigree <- data.table::copy(pedigree)
 
   #### Read founders list ####
-  if (!is.null(founders_file)) {
-    founders_raw <- tryCatch({
-      data.table::fread(founders_file, header = FALSE, colClasses = "character")
-    }, error = function(e) {
-      stop("Could not read founders list. Ensure it is a plain text or CSV/TSV file.")
-    })
-    founder_ids <- unique(founders_raw[[1]])
-  } else {
-    founder_ids <- character(0)
-  }
+  founder_ids <- .read_founders(founders_file)
 
   #### Build genotype matrices ####
   genos_mat   <- base::as.matrix(genos, rownames = "id")

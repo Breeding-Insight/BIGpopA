@@ -349,3 +349,21 @@ QPsolve <- function(Y, X) {
     TRUE                                      ~ "mismatch_combination"
   )
 }
+
+
+# Read founder ids from a file path, a character vector of ids, or a
+# data.frame / data.table (first column). Returns a character vector.
+.read_founders <- function(x) {
+  if (is.null(x)) return(character(0))
+  if (is.data.frame(x)) return(unique(as.character(x[[1]])))
+  if (is.character(x) && length(x) == 1 && file.exists(x)) {
+    out <- tryCatch(
+      data.table::fread(x, header = FALSE, colClasses = "character"),
+      error = function(e)
+        stop("Could not read founders list. Ensure it is a plain text or CSV/TSV file.")
+    )
+    return(unique(out[[1]]))
+  }
+  if (is.atomic(x)) return(unique(as.character(x)))
+  stop("founders_file must be a file path, a vector of ids, or a data.frame.")
+}
