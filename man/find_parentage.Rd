@@ -86,7 +86,7 @@ have \code{NA} in the remaining ranks. Status refers to rank 1 only.}
 
 \item{founders_file}{Optional. Founder IDs as a path to a one-column file, a
 character vector of ids, or a data.frame (first column). Only used when \code{progeny_file} is a pedigree: founders with
-both parents unknown are skipped instead of searched. Default is NULL.}
+both parents unknown are skipped and not searched. Default is NULL.}
 }
 \value{
 A named list (returned invisibly) with elements:
