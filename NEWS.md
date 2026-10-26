@@ -1,6 +1,7 @@
 # BIGpopA 2.2.1
 - `check_ped()`: each cycle in `dependencies` is now reported once, as a closed path in which every id is a recorded parent of the one before it (e.g. `A -> B -> A`), instead of once per individual in the cycle. Interlocked loops are reported together, with one loop as an example. Cycle detection now runs in linear time without recursion, so large pedigrees with many shared ancestors no longer stall, and an individual recorded as its own parent is reported only by its own message.
 - `check_ped()`: `dependencies` always has a character `dependency` column; with no dependencies it was a data frame without columns.
+- `find_parentage()`: the error of tied best pairs (`mendelian_error_pct_2`, ...) is rounded to 2 decimals, like the best pair; it was printed with full precision.
 
 # BIGpopA 2.2.0
 - `validate_pedigree()` and `find_parentage()`: `founders_file` now also accepts a character vector of ids or a data.frame (first column), in addition to a file path. All inputs can now be supplied from memory.
