@@ -1,6 +1,8 @@
-# BIGpopA 2.2.0
+# BIGpopA 2.2.1
 - `check_ped()`: each cycle in `dependencies` is now reported once, as a closed path in which every id is a recorded parent of the one before it (e.g. `A -> B -> A`), instead of once per individual in the cycle. Interlocked loops are reported together, with one loop as an example. Cycle detection now runs in linear time without recursion, so large pedigrees with many shared ancestors no longer stall, and an individual recorded as its own parent is reported only by its own message.
 - `check_ped()`: `dependencies` always has a character `dependency` column; with no dependencies it was a data frame without columns.
+
+# BIGpopA 2.2.0
 - `validate_pedigree()` and `find_parentage()`: `founders_file` now also accepts a character vector of ids or a data.frame (first column), in addition to a file path. All inputs can now be supplied from memory.
 - `validate_pedigree()`: removed the suggested replacement parents (`best_male_candidate`, `best_male_candidate_error_pct`, `best_female_candidate`, `best_female_candidate_error_pct`) from `full_results` and the per-status tables. Use `find_parentage(method = "fill_pedigree")` on `corrected_pedigree` to fill in missing parents.
 - `validate_pedigree()`: new `marker_summary` element in the returned list gives, for every marker, the number of trios tested, the number with a Mendelian mismatch and the mismatch percentage, sorted worst first. It covers all trios with both parents known and genotyped, and helps spot markers (e.g. paralogous or miscalled) that cause many failures.
